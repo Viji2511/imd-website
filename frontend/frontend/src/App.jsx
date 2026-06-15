@@ -217,19 +217,19 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
   const range = maxVal - minVal || 1;
 
   const points = data.map((val, idx) => {
-    const x = (idx / (data.length - 1)) * 170 + 8;
+    const x = (idx / (data.length - 1)) * 170 + 10;
     const y = 48 - ((val - minVal) / range) * 38;
     return { x, y, val };
   });
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(" ");
-  const areaD = `${pathD} L ${points[points.length - 1].x} 52 L ${points[0].x} 52 Z`;
+  const areaD = `${pathD} L ${points[points.length - 1].x} 48 L ${points[0].x} 48 Z`;
 
   const gradientId = `trendGrad-${color.replace("#", "")}`;
 
   return (
     <div className="trend-chart-container" style={{ width: '100%', marginTop: 6 }}>
-      <svg width="100%" height="56" viewBox="0 0 190 56" style={{ overflow: 'visible' }}>
+      <svg width="100%" height="56" viewBox="0 0 230 56" style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={color} stopOpacity="0.25" />
@@ -238,9 +238,9 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
         </defs>
         
         {/* Horizontal grid bounds */}
-        <line x1="8" y1="10" x2="178" y2="10" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1="8" y1="30" x2="178" y2="30" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1="8" y1="48" x2="178" y2="48" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="10" x2="180" y2="10" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="29" x2="180" y2="29" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="48" x2="180" y2="48" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
 
         {/* Shaded Area underneath the line */}
         <path d={areaD} fill={`url(#${gradientId})`} />
@@ -262,10 +262,10 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
         ))}
 
         {/* Left/Right Range Labels */}
-        <text x="182" y="12" fontSize="6" fill="var(--text-muted)" textAnchor="start">{maxVal}{unit}</text>
-        <text x="182" y="50" fontSize="6" fill="var(--text-muted)" textAnchor="start">{minVal}{unit}</text>
+        <text x="186" y="12" fontSize="6.5" fill="var(--text-muted)" textAnchor="start">{maxVal}{unit}</text>
+        <text x="186" y="50" fontSize="6.5" fill="var(--text-muted)" textAnchor="start">{minVal}{unit}</text>
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.52rem', color: 'var(--text-muted)', marginTop: 2, padding: '0 2px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', color: 'var(--text-muted)', marginTop: 4, paddingLeft: '4.3%', paddingRight: '21.7%' }}>
         <span>12h ago</span>
         <span>Now</span>
       </div>

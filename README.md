@@ -47,24 +47,3 @@ npm run dev
 Open `http://localhost:5173` in your browser.
 
 ---
-
-## 🌐 How to Deploy (Free Tier)
-
-### 1. Backend on Render
-1. Create a free account on [Render](https://render.com/).
-2. Create a **New Web Service** linked to your GitHub repository.
-3. Configure settings:
-   * **Language:** `Node`
-   * **Build Command:** `npm install`
-   * **Start Command:** `node app.js`
-   * **Instance Type:** `Free`
-4. Copy the public Render service URL once deployed.
-
-### 2. Frontend on Vercel
-1. Create a free account on [Vercel](https://vercel.com/).
-2. Create a new project and import your GitHub repository.
-3. Configure settings:
-   * **Framework Preset:** `Vite`
-   * **Root Directory:** **`frontend/frontend`**
-   * **Environment Variables:** Add `VITE_API_URL` with your Render backend URL.
-4. Click **Deploy**.

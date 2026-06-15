@@ -651,7 +651,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100px;
+  height: 130px;
   transition: var(--transition);
 }
 

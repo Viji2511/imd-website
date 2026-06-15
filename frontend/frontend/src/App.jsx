@@ -38,60 +38,25 @@ const FALLBACK_AIRPORTS = [
 function generateMockWeather(icao) {
   const baseTime = new Date();
   const dateStr = baseTime.toISOString().split('T')[0];
-  const timeStr = baseTime.toTimeString().split(' ')[0].substring(0, 5);
-  
-  let baseTemp = 30;
-  let baseWindSpeed = 10;
-  let baseWindDir = 250;
-  let basePressure = 1010;
-  let baseVisibility = 6000;
-  let baseCloud = 'FEW020';
-
-  if (icao === 'VOCB' || icao === 'VOCE') {
-    baseTemp = 26; baseWindSpeed = 14; baseWindDir = 295; basePressure = 1008;
-  } else if (icao === 'VOMD') {
-    baseTemp = 33; baseWindSpeed = 8; baseWindDir = 220; basePressure = 1011;
-  } else if (icao === 'VOSM') {
-    baseTemp = 29; baseWindSpeed = 11; baseWindDir = 265; basePressure = 1009;
-  } else if (icao === 'VOTK') {
-    baseTemp = 31; baseWindSpeed = 15; baseWindDir = 310; basePressure = 1010;
-  } else if (icao === 'VOTR') {
-    baseTemp = 32; baseWindSpeed = 9; baseWindDir = 240; basePressure = 1012;
-  }
-
-  const latestWeather = {
-    station: icao,
-    temperature: baseTemp,
-    dewpoint: baseTemp - 5,
-    visibility: baseVisibility,
-    wind_direction: baseWindDir,
-    wind_speed: baseWindSpeed,
-    gust: null,
-    pressure: basePressure,
-    cloud: baseCloud,
-    datetime: `${dateStr} ${timeStr}`,
-    rawCode: `METAR ${icao} ${baseTime.getUTCDate()}${String(baseTime.getUTCHours()).padStart(2, '0')}${String(baseTime.getUTCMinutes()).padStart(2, '0')}Z ${baseWindDir}${String(baseWindSpeed).padStart(2, '0')}KT ${baseVisibility} ${baseCloud} ${baseTemp}/${baseTemp - 5} Q${basePressure} NOSIG`,
-    timeLabel: `${timeStr} LT`
-  };
-
   const history = [];
-  for (let i = 0; i < 7; i++) {
+
+  for (let i = 0; i < 24; i++) {
     const timeDiff = i * 30 * 60 * 1000; // 30 min intervals
     const recordTime = new Date(baseTime.getTime() - timeDiff);
     const hours = String(recordTime.getHours()).padStart(2, '0');
     const minutes = String(recordTime.getMinutes()).padStart(2, '0');
 
-    const tempOffset = Math.sin(i * 1.2) * 1.5 - (i * 0.4);
-    const windOffset = Math.cos(i * 0.9) * 2 + (i * 0.3);
-    const pressureOffset = Math.sin(i * 1.5) * 1.2;
-    const visOffset = -i * 600;
+    // Smooth deterministic variations ensuring ranges (Temp: 24-34, Wind: 2-12 kt, Press: 1009-1011, Vis: 2000-6000)
+    const temp = 29 + Math.round(Math.sin(i * 0.35) * 5);
+    const dewpoint = temp - 4;
+    const wind = 7 + Math.round(Math.cos(i * 0.4) * 5);
+    const pressure = 1010 + Math.round(Math.sin(Math.floor(i / 3) * 1.25) * 1);
+    const visibility = 4000 + Math.round(Math.sin(i * 0.25) * 2000);
 
-    const temp = Math.round(latestWeather.temperature + tempOffset);
-    const wind = Math.max(2, Math.round(latestWeather.wind_speed + windOffset));
-    const pressure = Math.round(latestWeather.pressure + pressureOffset);
-    const visibility = Math.max(2000, Math.min(10000, latestWeather.visibility + visOffset));
+    const wind_direction = 180;
+    const cloud = 'FEW020';
 
-    const rawMETAR = `METAR ${icao} ${recordTime.getUTCDate()}${hours}${minutes}Z ${latestWeather.wind_direction}${String(wind).padStart(2, '0')}KT ${visibility} ${latestWeather.cloud} ${temp}/${latestWeather.dewpoint} Q${pressure} NOSIG`;
+    const rawMETAR = `METAR ${icao} ${recordTime.getUTCDate()}${hours}${minutes}Z 180${String(wind).padStart(2, '0')}KT ${visibility} ${cloud} ${temp}/${dewpoint} Q${pressure} NOSIG`;
 
     history.push({
       timeLabel: `${hours}:${minutes} LT`,
@@ -101,9 +66,9 @@ function generateMockWeather(icao) {
       wind_speed: wind,
       pressure: pressure,
       visibility: visibility,
-      cloud: latestWeather.cloud,
-      wind_direction: latestWeather.wind_direction,
-      dewpoint: latestWeather.dewpoint,
+      cloud: cloud,
+      wind_direction: wind_direction,
+      dewpoint: dewpoint,
       station: icao
     });
   }
@@ -243,23 +208,68 @@ function calculateRH(t, td) {
   return Math.min(100, Math.max(0, rh));
 }
 
-// Mini sparkline component for visual trends
-function Sparkline({ data, color = "#38bdf8" }) {
+// Premium line chart component for detailed historic trends
+function TrendChart({ data, color = "#38bdf8", unit = "" }) {
   if (!data || data.length === 0) return null;
+  
   const minVal = Math.min(...data);
   const maxVal = Math.max(...data);
   const range = maxVal - minVal || 1;
 
   const points = data.map((val, idx) => {
-    const x = (idx / (data.length - 1)) * 90 + 5;
-    const y = 25 - ((val - minVal) / range) * 20;
-    return `${x},${y}`;
-  }).join(" ");
+    const x = (idx / (data.length - 1)) * 170 + 8;
+    const y = 48 - ((val - minVal) / range) * 38;
+    return { x, y, val };
+  });
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(" ");
+  const areaD = `${pathD} L ${points[points.length - 1].x} 52 L ${points[0].x} 52 Z`;
+
+  const gradientId = `trendGrad-${color.replace("#", "")}`;
 
   return (
-    <svg width="100%" height="30" viewBox="0 0 100 30" style={{ overflow: 'visible' }}>
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div className="trend-chart-container" style={{ width: '100%', marginTop: 6 }}>
+      <svg width="100%" height="56" viewBox="0 0 190 56" style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        
+        {/* Horizontal grid bounds */}
+        <line x1="8" y1="10" x2="178" y2="10" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="8" y1="30" x2="178" y2="30" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="8" y1="48" x2="178" y2="48" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
+
+        {/* Shaded Area underneath the line */}
+        <path d={areaD} fill={`url(#${gradientId})`} />
+
+        {/* The line itself */}
+        <path d={pathD} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Plotted markers (dots) for all data points */}
+        {points.map((p, idx) => (
+          <circle 
+            key={idx} 
+            cx={p.x} 
+            cy={p.y} 
+            r="1.5" 
+            fill={idx === points.length - 1 ? "#ffffff" : color} 
+            stroke={idx === points.length - 1 ? color : "none"}
+            strokeWidth="0.8"
+          />
+        ))}
+
+        {/* Left/Right Range Labels */}
+        <text x="182" y="12" fontSize="6" fill="var(--text-muted)" textAnchor="start">{maxVal}{unit}</text>
+        <text x="182" y="50" fontSize="6" fill="var(--text-muted)" textAnchor="start">{minVal}{unit}</text>
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.52rem', color: 'var(--text-muted)', marginTop: 2, padding: '0 2px' }}>
+        <span>12h ago</span>
+        <span>Now</span>
+      </div>
+    </div>
   );
 }
 
@@ -372,7 +382,7 @@ function App() {
 
   async function fetchWeather(icao) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/weather?station=${icao}&limit=15`);
+      const response = await fetch(`${API_BASE_URL}/api/weather?station=${icao}&limit=24`);
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0) {
@@ -765,30 +775,30 @@ function App() {
             {/* Sparkline historical trend graphs */}
             {history.length > 1 && (
               <section className="details-section" style={{ marginTop: 8 }}>
-                <h3 className="sidebar-section-title" style={{ fontSize: "0.72rem", marginBottom: 12 }}>Historic trends (Last 7 reports)</h3>
+                <h3 className="sidebar-section-title" style={{ fontSize: "0.72rem", marginBottom: 12 }}>Historic trends (Last 24 reports)</h3>
                 <div className="trends-grid">
                   <div className="trend-card">
                     <span className="trend-card__label">Temperature</span>
                     <span className="trend-card__value">{activeWeather.temperature}°C</span>
-                    <Sparkline data={history.map((h) => h.temperature).reverse()} color="#f43f5e" />
+                    <TrendChart data={history.map((h) => h.temperature).reverse()} color="#f43f5e" unit="°C" />
                   </div>
 
                   <div className="trend-card">
                     <span className="trend-card__label">Visibility</span>
                     <span className="trend-card__value">{activeWeather.visibility} m</span>
-                    <Sparkline data={history.map((h) => h.visibility).reverse()} color="#10b981" />
+                    <TrendChart data={history.map((h) => h.visibility).reverse()} color="#10b981" unit="m" />
                   </div>
 
                   <div className="trend-card">
                     <span className="trend-card__label">Wind Speed</span>
                     <span className="trend-card__value">{activeWeather.wind_speed} kt</span>
-                    <Sparkline data={history.map((h) => h.wind_speed).reverse()} color="#38bdf8" />
+                    <TrendChart data={history.map((h) => h.wind_speed).reverse()} color="#38bdf8" unit="kt" />
                   </div>
 
                   <div className="trend-card">
                     <span className="trend-card__label">Pressure</span>
                     <span className="trend-card__value">{activeWeather.pressure} hPa</span>
-                    <Sparkline data={history.map((h) => h.pressure).reverse()} color="#a855f7" />
+                    <TrendChart data={history.map((h) => h.pressure).reverse()} color="#a855f7" unit="hPa" />
                   </div>
                 </div>
               </section>

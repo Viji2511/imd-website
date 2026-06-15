@@ -353,14 +353,16 @@ function App() {
       const response = await fetch(`${API_BASE_URL}/api/runway-wind?station=${icao}`);
       if (response.ok) {
         const data = await response.json();
-        if (icao !== "VOMM" && data.length > 0) {
-          setRunwayWindData([data[0]]);
-        } else {
-          setRunwayWindData(data);
+        if (data && data.length > 0) {
+          if (icao !== "VOMM") {
+            setRunwayWindData([data[0]]);
+          } else {
+            setRunwayWindData(data);
+          }
+          return;
         }
-        return;
       }
-      throw new Error("Failed to load runway wind from API");
+      throw new Error("Failed to load runway wind from API or empty data returned");
     } catch (err) {
       console.error("Error fetching runway wind, falling back to mock data:", err);
       const mockRunwayWind = generateMockRunwayWind(icao);

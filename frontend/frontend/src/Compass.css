@@ -166,9 +166,9 @@
 .compass-panel {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(2, 6, 23, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,26 +180,40 @@
   width: 480px;
   max-width: 95vw;
   max-height: 85vh;
-  height: auto;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(35px);
-  -webkit-backdrop-filter: blur(35px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   overflow-y: auto;
-  color: #f8fafc;
+  color: var(--text);
   display: flex;
-  gap: 24px;
+  flex-direction: column;
+  gap: 16px;
   box-sizing: border-box;
-  animation: modal-enter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.compass-panel-card::-webkit-scrollbar {
+  width: 6px;
+}
+.compass-panel-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+.compass-panel-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.compass-panel-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 @keyframes modal-enter {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(12px);
+    transform: scale(0.96) translateY(8px);
   }
   to {
     opacity: 1;
@@ -207,38 +221,190 @@
   }
 }
 
-.compass-panel-card h3 { 
-  margin: 0; 
-  color: #fff;
-  font-size: 1.15rem;
-  font-weight: 800;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
 }
 
-.modal-actions { 
-  display: flex; 
-  justify-content: flex-end; 
+.modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.modal-airport-badge {
+  font-size: 0.65rem;
+  color: var(--accent);
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.modal-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.modal-glass-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.modal-visualizers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.visualizer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  padding: 14px 10px;
+}
+
+.visualizer-card .card-label {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.visualizer-card .card-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
   margin-top: 8px;
+}
+
+.visualizer-card .card-subtext {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.visualizer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 105px;
   width: 100%;
 }
 
-.modal-actions button { 
-  padding: 10px 22px; 
-  border-radius: 12px; 
-  border: none;
-  background: linear-gradient(135deg, var(--accent), #4f46e5);
-  color: #fff; 
-  cursor: pointer; 
-  font-weight: 700; 
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
-  transition: var(--transition);
+.modal-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
-.modal-actions button:hover { 
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.35);
-  filter: brightness(1.1);
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+}
+
+.metric-label {
+  font-size: 0.54rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-section-title {
+  margin: 0;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.modal-runways-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-runway-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.modal-runway-card .runway-name {
+  font-weight: 800;
+  color: var(--text);
+  font-size: 0.76rem;
+}
+
+.modal-runway-card .runway-speeds {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+}
+
+.trend-chart-container {
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trend-labels {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
 }
 
 @media (max-width: 640px) {
   .compass-face { border-width: 1.5px; }
+  .modal-visualizers { grid-template-columns: 1fr; }
 }
+

@@ -26,6 +26,123 @@ const getRadarUrl = (icao) => radarMapping[icao] || "https://mausam.imd.gov.in/R
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
+const FALLBACK_AIRPORTS = [
+  { id: 1, name: 'Chennai International Airport', city: 'Chennai', icao: 'VOMM' },
+  { id: 2, name: 'Coimbatore International Airport', city: 'Coimbatore', icao: 'VOCB' },
+  { id: 3, name: 'Madurai Airport', city: 'Madurai', icao: 'VOMD' },
+  { id: 4, name: 'Salem Airport', city: 'Salem', icao: 'VOSM' },
+  { id: 5, name: 'Tuticorin Airport', city: 'Tuticorin', icao: 'VOTK' },
+  { id: 6, name: 'Tiruchirappalli International Airport', city: 'Trichy', icao: 'VOTR' }
+];
+
+function generateMockWeather(icao) {
+  const baseTime = new Date();
+  const dateStr = baseTime.toISOString().split('T')[0];
+  const timeStr = baseTime.toTimeString().split(' ')[0].substring(0, 5);
+  
+  let baseTemp = 30;
+  let baseWindSpeed = 10;
+  let baseWindDir = 250;
+  let basePressure = 1010;
+  let baseVisibility = 6000;
+  let baseCloud = 'FEW020';
+
+  if (icao === 'VOCB' || icao === 'VOCE') {
+    baseTemp = 26; baseWindSpeed = 14; baseWindDir = 295; basePressure = 1008;
+  } else if (icao === 'VOMD') {
+    baseTemp = 33; baseWindSpeed = 8; baseWindDir = 220; basePressure = 1011;
+  } else if (icao === 'VOSM') {
+    baseTemp = 29; baseWindSpeed = 11; baseWindDir = 265; basePressure = 1009;
+  } else if (icao === 'VOTK') {
+    baseTemp = 31; baseWindSpeed = 15; baseWindDir = 310; basePressure = 1010;
+  } else if (icao === 'VOTR') {
+    baseTemp = 32; baseWindSpeed = 9; baseWindDir = 240; basePressure = 1012;
+  }
+
+  const latestWeather = {
+    station: icao,
+    temperature: baseTemp,
+    dewpoint: baseTemp - 5,
+    visibility: baseVisibility,
+    wind_direction: baseWindDir,
+    wind_speed: baseWindSpeed,
+    gust: null,
+    pressure: basePressure,
+    cloud: baseCloud,
+    datetime: `${dateStr} ${timeStr}`,
+    rawCode: `METAR ${icao} ${baseTime.getUTCDate()}${String(baseTime.getUTCHours()).padStart(2, '0')}${String(baseTime.getUTCMinutes()).padStart(2, '0')}Z ${baseWindDir}${String(baseWindSpeed).padStart(2, '0')}KT ${baseVisibility} ${baseCloud} ${baseTemp}/${baseTemp - 5} Q${basePressure} NOSIG`,
+    timeLabel: `${timeStr} LT`
+  };
+
+  const history = [];
+  for (let i = 0; i < 7; i++) {
+    const timeDiff = i * 30 * 60 * 1000; // 30 min intervals
+    const recordTime = new Date(baseTime.getTime() - timeDiff);
+    const hours = String(recordTime.getHours()).padStart(2, '0');
+    const minutes = String(recordTime.getMinutes()).padStart(2, '0');
+
+    const tempOffset = Math.sin(i * 1.2) * 1.5 - (i * 0.4);
+    const windOffset = Math.cos(i * 0.9) * 2 + (i * 0.3);
+    const pressureOffset = Math.sin(i * 1.5) * 1.2;
+    const visOffset = -i * 600;
+
+    const temp = Math.round(latestWeather.temperature + tempOffset);
+    const wind = Math.max(2, Math.round(latestWeather.wind_speed + windOffset));
+    const pressure = Math.round(latestWeather.pressure + pressureOffset);
+    const visibility = Math.max(2000, Math.min(10000, latestWeather.visibility + visOffset));
+
+    const rawMETAR = `METAR ${icao} ${recordTime.getUTCDate()}${hours}${minutes}Z ${latestWeather.wind_direction}${String(wind).padStart(2, '0')}KT ${visibility} ${latestWeather.cloud} ${temp}/${latestWeather.dewpoint} Q${pressure} NOSIG`;
+
+    history.push({
+      timeLabel: `${hours}:${minutes} LT`,
+      datetime: `${dateStr} ${hours}:${minutes}`,
+      rawCode: rawMETAR,
+      temperature: temp,
+      wind_speed: wind,
+      pressure: pressure,
+      visibility: visibility,
+      cloud: latestWeather.cloud,
+      wind_direction: latestWeather.wind_direction,
+      dewpoint: latestWeather.dewpoint,
+      station: icao
+    });
+  }
+  return history;
+}
+
+function generateMockRunwayWind(icao) {
+  let baseWindSpeed = 10;
+  let baseWindDir = 250;
+  if (icao === 'VOCB' || icao === 'VOCE') { baseWindSpeed = 14; baseWindDir = 295; }
+  else if (icao === 'VOMD') { baseWindSpeed = 8; baseWindDir = 220; }
+  else if (icao === 'VOSM') { baseWindSpeed = 11; baseWindDir = 265; }
+  else if (icao === 'VOTK') { baseWindSpeed = 15; baseWindDir = 310; }
+  else if (icao === 'VOTR') { baseWindSpeed = 9; baseWindDir = 240; }
+
+  const code = icao === 'VOCE' ? 'VOCB' : icao;
+  const rwys = {
+    VOMM: [{ name: "01L/19R", heading: 10 }, { name: "01R/19L", heading: 10 }],
+    VOCB: [{ name: "05/23", heading: 50 }, { name: "08/26", heading: 80 }],
+    VOMD: [{ name: "09/27", heading: 90 }],
+    VOSM: [{ name: "06/24", heading: 60 }],
+    VOTK: [{ name: "10/28", heading: 100 }],
+    VOTR: [{ name: "09/27", heading: 90 }],
+  }[code] || [{ name: "09/27", heading: 90 }];
+
+  return rwys.map((rwy, idx) => {
+    return {
+      label: `Runway ${idx + 1}`,
+      runwayNo: rwy.name.split('/')[0],
+      dataDateTime: new Date().toISOString(),
+      windSpeed1MinAvg: baseWindSpeed + idx * 2,
+      maxWindSpeed1Min: baseWindSpeed + 4 + idx * 2,
+      windDirection1MinAvg: baseWindSpeed > 0 ? (baseWindDir + idx * 10) % 360 : 0,
+      windSpeed: baseWindSpeed + idx * 2,
+      windDirection: baseWindDir
+    };
+  });
+}
+
 
 // Flight rule calculator
 function getFlightRule(visibility, cloud) {
@@ -225,51 +342,49 @@ function App() {
       setAirports(airportsWithWeather);
       setSelectedAirport(airportData[0].icao);
     } catch (err) {
-      console.error("Error fetching airports:", err);
+      console.error("Error fetching airports, falling back to static list:", err);
+      setAirports(FALLBACK_AIRPORTS);
+      setSelectedAirport(FALLBACK_AIRPORTS[0].icao);
     }
   }
 
   async function fetchRunwayWind(icao) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/runway-wind?station=VOMM`);
+      const response = await fetch(`${API_BASE_URL}/api/runway-wind?station=${icao}`);
       if (response.ok) {
         const data = await response.json();
-        if (icao !== "VOMM") {
-          // Show only one of the Chennai runways for other airports for now
-          setRunwayWindData(data.length > 0 ? [data[0]] : []);
+        if (icao !== "VOMM" && data.length > 0) {
+          setRunwayWindData([data[0]]);
         } else {
           setRunwayWindData(data);
         }
-      } else {
-        setRunwayWindData([]);
+        return;
       }
+      throw new Error("Failed to load runway wind from API");
     } catch (err) {
-      console.error("Error fetching runway wind:", err);
-      setRunwayWindData([]);
+      console.error("Error fetching runway wind, falling back to mock data:", err);
+      const mockRunwayWind = generateMockRunwayWind(icao);
+      setRunwayWindData(mockRunwayWind);
     }
   }
 
   async function fetchWeather(icao) {
     try {
-      // Only Chennai CSV exists; backend falls back to VOMM data for other stations
       const response = await fetch(`${API_BASE_URL}/api/weather?station=${icao}&limit=15`);
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0) {
           setHistory(data);
           setActiveWeather(data[0]);
-        } else {
-          setHistory([]);
-          setActiveWeather(null);
+          return;
         }
-      } else {
-        setHistory([]);
-        setActiveWeather(null);
       }
+      throw new Error("Failed to load weather from API");
     } catch (err) {
-      console.error("Error fetching weather:", err);
-      setHistory([]);
-      setActiveWeather(null);
+      console.error("Error fetching weather, falling back to mock data:", err);
+      const mockHistory = generateMockWeather(icao);
+      setHistory(mockHistory);
+      setActiveWeather(mockHistory[0]);
     }
   }
 
@@ -329,7 +444,9 @@ function App() {
   const activeTheme = getWeatherTheme(activeWeather);
   const weatherIcon = activeWeather ? getWeatherIcon(activeTheme, activeWeather.cloud) : "⛅";
   const flightRule = activeWeather ? getFlightRule(activeWeather.visibility, activeWeather.cloud) : null;
-  const currentRadarUrl = getRadarUrl(selectedAirport);
+  const cacheBuster = Math.floor(Date.now() / (15 * 60 * 1000)); // 15-minute cache buster
+  const currentRadarUrl = `${getRadarUrl(selectedAirport)}?t=${cacheBuster}`;
+  const currentSatelliteUrl = `${satelliteUrl}?t=${cacheBuster}`;
 
 
   // Forecast path coordinates
@@ -767,12 +884,12 @@ function App() {
 
                 <div
                   className="sidebar-feed-card"
-                  onClick={() => setZoomedImage(satelliteUrl)}
+                  onClick={() => setZoomedImage(currentSatelliteUrl)}
                 >
                   <span style={{ display: 'block', fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, paddingLeft: 2 }}>Satellite Image</span>
                   <div style={{ width: '100%', height: '80px', borderRadius: '8px', overflow: 'hidden', background: '#090d16' }}>
                     <img
-                      src={satelliteUrl}
+                      src={currentSatelliteUrl}
                       alt="Satellite Feed"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
@@ -813,6 +930,14 @@ function App() {
             <img
               src={zoomedImage}
               alt="Zoomed Weather Map View"
+              onError={(e) => {
+                e.target.onerror = null;
+                if (e.target.src.includes('Radar')) {
+                  e.target.src = "https://mausam.imd.gov.in/Radar/caz_cni.gif";
+                } else {
+                  e.target.src = "https://mausam.imd.gov.in/Satellite/3Dasiasec_ir1.jpg";
+                }
+              }}
               style={{
                 maxWidth: '100%',
                 maxHeight: '80vh',

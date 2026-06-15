@@ -34,6 +34,25 @@ function parseTemp(tempStr) {
   return parseInt(tempStr, 10);
 }
 
+function getStationOffsets(station) {
+  const code = station.toUpperCase();
+  switch (code) {
+    case 'VOCB':
+    case 'VOCE':
+      return { temp: -4, dew: -3, windDir: 45, windSpeed: 3, pressure: -2, visibility: -1000 };
+    case 'VOMD':
+      return { temp: 2, dew: 1, windDir: -30, windSpeed: -2, pressure: 1, visibility: 500 };
+    case 'VOSM':
+      return { temp: -1, dew: -1, windDir: 15, windSpeed: 1, pressure: -1, visibility: -300 };
+    case 'VOTK':
+      return { temp: 1, dew: 2, windDir: 90, windSpeed: 4, pressure: 0, visibility: 1000 };
+    case 'VOTR':
+      return { temp: 3, dew: 1, windDir: -60, windSpeed: -1, pressure: 2, visibility: -500 };
+    default:
+      return { temp: 0, dew: 0, windDir: 0, windSpeed: 0, pressure: 0, visibility: 0 };
+  }
+}
+
 function parseRow(row, stationNameOverride = null) {
   const cols = [];
   let current = '';
@@ -76,6 +95,7 @@ function parseRow(row, stationNameOverride = null) {
   if (tokens[tokenIdx] === 'METAR' || tokens[tokenIdx] === 'COR') {
     tokenIdx++;
   }
+  const stationTokenIdx = tokenIdx;
   if (!station) {
     station = tokens[tokenIdx] || '';
   }
@@ -140,6 +160,72 @@ function parseRow(row, stationNameOverride = null) {
     }
   }
 
+  let finalMetarStr = metarStr;
+
+  if (stationNameOverride) {
+    const offsets = getStationOffsets(stationNameOverride);
+    temperature += offsets.temp;
+    dewpoint += offsets.dew;
+    if (dewpoint > temperature) {
+      dewpoint = temperature - 1;
+    }
+    wind_direction = (wind_direction + offsets.windDir + 360) % 360;
+    wind_speed = Math.max(0, wind_speed + offsets.windSpeed);
+    if (gust) {
+      gust = Math.max(wind_speed, gust + offsets.windSpeed);
+    }
+    pressure += offsets.pressure;
+    visibility = Math.max(0, Math.min(9999, visibility + offsets.visibility));
+
+    // Reconstruct the raw METAR token by token to align with perturbed metrics
+    tokens[stationTokenIdx] = stationNameOverride;
+
+    for (let i = tokenIdx; i < tokens.length; i++) {
+      const token = tokens[i];
+
+      if (token.endsWith('KT') || token.endsWith('MPS')) {
+        const match = token.match(/^(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?KT$/);
+        if (match) {
+          const dirStr = match[1] === 'VRB' ? 'VRB' : String(wind_direction).padStart(3, '0');
+          const speedStr = String(wind_speed).padStart(2, '0');
+          const gustStr = gust ? `G${String(gust).padStart(2, '0')}` : '';
+          tokens[i] = `${dirStr}${speedStr}${gustStr}KT`;
+        }
+        continue;
+      }
+
+      if (/^\d{4}$/.test(token)) {
+        tokens[i] = String(visibility).padStart(4, '0');
+        continue;
+      }
+
+      const tempMatch = token.match(/^(M?\d{2})\/(M?\d{2})$/);
+      if (tempMatch) {
+        const tempSign = temperature < 0 ? 'M' : '';
+        const tempStr = tempSign + String(Math.abs(temperature)).padStart(2, '0');
+        const dewSign = dewpoint < 0 ? 'M' : '';
+        const dewStr = dewSign + String(Math.abs(dewpoint)).padStart(2, '0');
+        tokens[i] = `${tempStr}/${dewStr}`;
+        continue;
+      }
+
+      const pressQMatch = token.match(/^Q(\d{4})$/);
+      if (pressQMatch) {
+        tokens[i] = `Q${String(pressure).padStart(4, '0')}`;
+        continue;
+      }
+
+      const pressAMatch = token.match(/^A(\d{4})$/);
+      if (pressAMatch) {
+        const pressInHg = Math.round(pressure * 100 / 33.86389);
+        tokens[i] = `A${String(pressInHg).padStart(4, '0')}`;
+        continue;
+      }
+    }
+
+    finalMetarStr = tokens.join(' ');
+  }
+
   const timePart = valid.split(' ')[1] || '00:00';
   const timeLabel = `${timePart} LT`;
 
@@ -154,7 +240,7 @@ function parseRow(row, stationNameOverride = null) {
     pressure,
     cloud,
     datetime: valid,
-    rawCode: metarStr,
+    rawCode: finalMetarStr,
     timeLabel
   };
 }

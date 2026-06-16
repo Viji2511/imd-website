@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import Compass from "./Compass";
+import DetailedTaf from "./DetailedTaf";
 // Runway configurations
 const runwayData = {
   VOMM: [{ name: "01L/19R", heading: 10 }, { name: "01R/19L", heading: 10 }],
@@ -15,6 +16,7 @@ const runwayData = {
 const radarMapping = {
   VOMM: "https://mausam.imd.gov.in/Radar/caz_cni.gif", // Chennai (VOMM)
   VOCE: "https://mausam.imd.gov.in/Radar/caz_koc.gif", // Coimbatore (VOCE) -> Kochi radar
+  VOCB: "https://mausam.imd.gov.in/Radar/caz_koc.gif", // Coimbatore display code -> Kochi radar
   VOMD: "https://mausam.imd.gov.in/Radar/caz_kkl.gif", // Madurai (VOMD) -> Karaikal radar
   VOSM: "https://mausam.imd.gov.in/Radar/caz_cni.gif", // Salem (VOSM) -> Chennai radar
   VOTK: "https://mausam.imd.gov.in/Radar/caz_koc.gif", // Tuticorin (VOTK) -> Kochi radar
@@ -23,6 +25,80 @@ const radarMapping = {
 
 const satelliteUrl = "https://mausam.imd.gov.in/Satellite/3Dasiasec_ir1.jpg";
 const getRadarUrl = (icao) => radarMapping[icao] || "https://mausam.imd.gov.in/Radar/caz_cni.gif";
+
+const TAF_DATA = {
+  VOMM: `TAF VOMM 150500Z 1506/1612 27010G20KT 6000 FEW020 SCT100
+PROB30 TEMPO 1509/1515 1500 TSRA/RA SCT015 FEW025CB BKN080
+BECMG 1512/1513 16010KT 5000 HZ
+BECMG 1518/1519 27010KT
+BECMG 1606/1607 27010G20KT 6000`,
+  VOCB: `TAF VOCB 150500Z 1506/1612 27010G20KT 6000 FEW020 SCT100
+PROB30 TEMPO 1509/1515 1500 TSRA/RA SCT015 FEW025CB BKN080
+BECMG 1512/1513 16010KT 5000 HZ
+BECMG 1518/1519 27010KT
+BECMG 1606/1607 27010G20KT 6000`,
+  VOCE: `TAF VOCB 150500Z 1506/1612 27010G20KT 6000 FEW020 SCT100
+PROB30 TEMPO 1509/1515 1500 TSRA/RA SCT015 FEW025CB BKN080
+BECMG 1512/1513 16010KT 5000 HZ
+BECMG 1518/1519 27010KT
+BECMG 1606/1607 27010G20KT 6000`
+};
+
+function getTafText(icao) {
+  return TAF_DATA[icao] || TAF_DATA.VOMM;
+}
+
+function decodeTafWeather(token) {
+  const code = token || "";
+  const parts = [];
+  if (code.includes("TS")) parts.push("Thunderstorm");
+  if (code.includes("RA")) parts.push("Rain");
+  if (code.includes("HZ")) parts.push("Haze");
+  if (code.includes("BR")) parts.push("Mist");
+  if (code.includes("FG")) parts.push("Fog");
+  return parts.length ? parts.join(" + ") : code;
+}
+
+function decodeTafCloud(token) {
+  if (!token) return "--";
+  const type = token.slice(0, 3);
+  const height = parseInt(token.slice(3, 6), 10);
+  const suffix = token.slice(6);
+  const typeMap = { FEW: "Few", SCT: "Scattered", BKN: "Broken", OVC: "Overcast" };
+  const typeText = typeMap[type] || type;
+  const heightText = Number.isFinite(height) ? `${height * 100} ft` : "height unknown";
+  return `${typeText} at ${heightText}${suffix ? ` (${suffix})` : ""}`;
+}
+
+function parseTaf(tafText) {
+  if (!tafText) return null;
+  const lines = tafText.trim().split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  const allTokens = tafText.replace(/\n/g, " ").trim().split(/\s+/);
+  const station = allTokens[1] || "--";
+  const issue = allTokens[2] || "--";
+  const validity = allTokens[3] || "--";
+
+  const sections = lines.map((line) => {
+    const tokens = line.split(/\s+/);
+    const changeType = tokens[0] === "TAF" ? "BASE" : tokens[0];
+    const timeToken = changeType === "BASE" ? (tokens[3] || "--") : (tokens.find((t) => /^\d{4}\/\d{4}$/.test(t)) || "--");
+    const wind = tokens.find((t) => /^\d{3}\d{2}(G\d{2})?KT$/.test(t)) || "--";
+    const visibility = tokens.find((t) => /^\d{4}$/.test(t)) || "--";
+    const weather = tokens.find((t) => /(TS|RA|HZ|BR|FG|SH|DZ)/.test(t)) || "--";
+    const clouds = tokens.filter((t) => /^(FEW|SCT|BKN|OVC)\d{3}(CB|TCU)?$/.test(t));
+    return {
+      changeType,
+      timeToken,
+      wind,
+      visibility,
+      weather: weather === "--" ? "--" : decodeTafWeather(weather),
+      clouds: clouds.length ? clouds.map(decodeTafCloud).join(", ") : "--",
+      raw: line
+    };
+  });
+
+  return { station, issue, validity, sections };
+}
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
@@ -734,7 +810,7 @@ function getCeiling(cloud) {
 
 // Active runway direction selector
 function getActiveRunwayDirection(icao, windDirection) {
-  const stationMapping = { VOCB: "VOCE" };
+  const stationMapping = { VOCE: "VOCB" };
   const code = stationMapping[icao] ?? icao;
   const rwys = runwayData[code];
   if (!rwys) return "";
@@ -768,6 +844,11 @@ function App() {
   const [selectedTrend, setSelectedTrend] = useState(null);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDaylightModalOpen, setIsDaylightModalOpen] = useState(false);
+  const [awsStations, setAwsStations] = useState([]);
+  const [selectedAwsStation, setSelectedAwsStation] = useState("");
+  const [tafText, setTafText] = useState("");
+  const [tafSource, setTafSource] = useState("fallback");
+  const [isDetailedTafOpen, setIsDetailedTafOpen] = useState(false);
 
   const handleOpenTrendModal = (title, key, color, unit) => {
     if (!history || history.length === 0) return;
@@ -790,9 +871,25 @@ function App() {
   }, []);
 
   useEffect(() => {
+    fetch("/data/aws.json")
+      .then((res) => res.json())
+      .then((data) => {
+        setAwsStations(data);
+        if (data && data.length > 0) {
+          setSelectedAwsStation(data[0].station);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading AWS data:", err);
+        setAwsStations([]);
+      });
+  }, []);
+
+  useEffect(() => {
     if (selectedAirport) {
       fetchWeather(selectedAirport);
       fetchRunwayWind(selectedAirport);
+      fetchTaf(selectedAirport);
     }
   }, [selectedAirport]);
 
@@ -845,6 +942,27 @@ function App() {
       console.error("Error fetching runway wind, falling back to mock data:", err);
       const mockRunwayWind = generateMockRunwayWind(icao);
       setRunwayWindData(mockRunwayWind);
+    }
+  }
+
+
+  async function fetchTaf(icao) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/taf?station=${icao}`);
+      if (!response.ok) {
+        throw new Error("TAF API request failed");
+      }
+      const data = await response.json();
+      if (data && data.taf) {
+        setTafText(data.taf);
+        setTafSource(data.fallback ? "fallback sample" : data.source || "metar-taf.com");
+        return;
+      }
+      throw new Error("TAF API returned no TAF text");
+    } catch (err) {
+      console.error("Error fetching TAF, falling back to static sample:", err);
+      setTafText(getTafText(icao));
+      setTafSource("fallback sample");
     }
   }
 
@@ -920,6 +1038,10 @@ function App() {
     if (cloudCode.includes("BKN") || cloudCode.includes("OVC")) return "☁️";
     return "⛅";
   }
+
+  const selectedAws = awsStations.find((station) => station.station === selectedAwsStation);
+  const displayTafText = tafText || getTafText(selectedAirport);
+  const parsedTaf = parseTaf(displayTafText);
 
   const activeTheme = getWeatherTheme(activeWeather);
   const weatherIcon = activeWeather ? getWeatherIcon(activeTheme, activeWeather.cloud) : "⛅";
@@ -1047,6 +1169,53 @@ function App() {
             </select>
           </>
         )}
+
+        {/* AWS station dropdown and selected AWS observation cards */}
+        {awsStations.length > 0 && (
+          <section className="aws-panel">
+            <h3 className="sidebar-section-title">AWS Stations</h3>
+            <select
+              value={selectedAwsStation}
+              onChange={(e) => setSelectedAwsStation(e.target.value)}
+              className="airport-dropdown aws-dropdown"
+            >
+              {awsStations.map((station) => (
+                <option key={station.station} value={station.station}>
+                  {station.name}
+                </option>
+              ))}
+            </select>
+
+            {selectedAws && (
+              <div className="aws-card-grid">
+                <div className="aws-card">
+                  <span>Temp</span>
+                  <strong>{selectedAws.temp}°C</strong>
+                </div>
+                <div className="aws-card">
+                  <span>Dew Point</span>
+                  <strong>{selectedAws.dewPoint}°C</strong>
+                </div>
+                <div className="aws-card">
+                  <span>RH</span>
+                  <strong>{selectedAws.rh}%</strong>
+                </div>
+                <div className="aws-card">
+                  <span>Wind</span>
+                  <strong>{selectedAws.ws} kt</strong>
+                </div>
+                <div className="aws-card">
+                  <span>Dir</span>
+                  <strong>{selectedAws.wd}°</strong>
+                </div>
+                <div className="aws-card">
+                  <span>Rain</span>
+                  <strong>{selectedAws.rf} mm</strong>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
       </aside>
 
       {/* COLUMN 2: MIDDLE MAIN DASHBOARD */}
@@ -1057,7 +1226,7 @@ function App() {
             <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h2 className="station-title">
-                  {activeWeather.station === "VOCE"
+                  {activeWeather.station === "VOCE" || activeWeather.station === "VOCB"
                     ? "METAR VOCB COIMBATORE INTERNATIONAL AIRPORT"
                     : `METAR ${activeWeather.station} · ${selectedAirportDetails?.name ?? activeWeather.station}`}
                 </h2>
@@ -1277,6 +1446,20 @@ function App() {
               <span className="raw-metar-container__label">Raw METAR</span>
               <span>{activeWeather.rawCode}</span>
             </section>
+
+            {/* TAF Forecast Section */}
+            {parsedTaf && (
+              <section className="taf-section">
+                <div className="taf-header-row">
+                  <h3>Terminal Aerodrome Forecast</h3>
+                  <span>{parsedTaf.station} · Valid {parsedTaf.validity} · Source: {tafSource}</span>
+                </div>
+                <div className="taf-raw" onClick={() => setIsDetailedTafOpen(true)}>
+                  <span className="raw-metar-container__label">Raw TAF</span>
+                  <pre>{displayTafText}</pre>
+                </div>
+              </section>
+            )}
           </>
         ) : (
           <section className="main-empty-state">
@@ -1475,6 +1658,16 @@ function App() {
         <DaylightModal
           weather={activeWeather}
           onClose={() => setIsDaylightModalOpen(false)}
+        />
+      )}
+
+      {/* Pop-up modal overlay for detailed TAF parsed timeline forecast */}
+      {isDetailedTafOpen && (
+        <DetailedTaf
+          airport={selectedAirportDetails}
+          tafText={displayTafText}
+          activeWeather={activeWeather}
+          onClose={() => setIsDetailedTafOpen(false)}
         />
       )}
       </div>

@@ -21,6 +21,74 @@ const airports = [
   { id: 6, name: 'Tiruchirappalli International Airport', city: 'Trichy', icao: 'VOTR' }
 ];
 
+
+const TAF_FALLBACK = {
+  VOMM: `TAF VOMM 150500Z 1506/1612 27010G20KT 6000 FEW020 SCT100
+PROB30 TEMPO 1509/1515 1500 TSRA/RA SCT015 FEW025CB BKN080
+BECMG 1512/1513 16010KT 5000 HZ
+BECMG 1518/1519 27010KT
+BECMG 1606/1607 27010G20KT 6000`,
+  VOCB: `TAF VOCB 150500Z 1506/1612 27010G20KT 6000 FEW020 SCT100
+PROB30 TEMPO 1509/1515 1500 TSRA/RA SCT015 FEW025CB BKN080
+BECMG 1512/1513 16010KT 5000 HZ
+BECMG 1518/1519 27010KT
+BECMG 1606/1607 27010G20KT 6000`,
+  VOCE: `TAF VOCE 150500Z 1506/1612 27010G20KT 6000 FEW020 SCT100
+PROB30 TEMPO 1509/1515 1500 TSRA/RA SCT015 FEW025CB BKN080
+BECMG 1512/1513 16010KT 5000 HZ
+BECMG 1518/1519 27010KT
+BECMG 1606/1607 27010G20KT 6000`,
+  VOMD: `TAF VOMD 150500Z 1506/1612 27010KT 6000 FEW020 SCT100 BECMG 1512/1513 16010KT 5000 HZ`,
+  VOSM: `TAF VOSM 150500Z 1506/1612 27010KT 6000 FEW020 SCT100 BECMG 1512/1513 16010KT 5000 HZ`,
+  VOTK: `TAF VOTK 150500Z 1506/1612 27010KT 6000 FEW020 SCT100 BECMG 1512/1513 16010KT 5000 HZ`,
+  VOTR: `TAF VOTR 150500Z 1506/1612 27010KT 6000 FEW020 SCT100 BECMG 1512/1513 16010KT 5000 HZ`
+};
+
+function decodeHtmlEntities(value) {
+  return value
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#x2F;/gi, '/')
+    .replace(/&#47;/gi, '/')
+    .replace(/&#10;/gi, '\n')
+    .replace(/&#13;/gi, '\n');
+}
+
+function extractTafFromHtml(html, station) {
+  if (!html) return '';
+  const text = decodeHtmlEntities(html)
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/p>|<\/div>|<\/li>|<\/tr>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s+/g, '\n')
+    .trim();
+
+  const oneLine = text.replace(/\s+/g, ' ');
+  const stationPattern = station.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = oneLine.match(new RegExp(`TAF(?:\\s+(?:AMD|COR))?\\s+${stationPattern}\\s+\\d{6}Z\\s+\\d{4}\\/\\d{4}[\\s\\S]{0,900}`, 'i'));
+  if (!match) return '';
+
+  let taf = match[0]
+    .replace(/\s+(METAR|SPECI)\s+[A-Z]{4}\s+\d{6}Z[\s\S]*$/i, '')
+    .replace(/\s+(Airport|Runways|Weather|Decoded|Raw|Share|Download|Source)\b[\s\S]*$/i, '')
+    .trim();
+
+  // Put common change groups onto separate lines to make the dashboard readable.
+  taf = taf
+    .replace(/\s+(PROB\d{2}\s+TEMPO\s+\d{4}\/\d{4})/g, '\n$1')
+    .replace(/\s+(TEMPO\s+\d{4}\/\d{4})/g, '\n$1')
+    .replace(/\s+(BECMG\s+\d{4}\/\d{4})/g, '\n$1')
+    .replace(/\s+(FM\d{6})/g, '\n$1');
+
+  return taf;
+}
+
 function degToCardinal(deg) {
   const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
   const index = Math.round(((deg % 360) / 22.5)) % 16;
@@ -275,7 +343,7 @@ function getLatestRunwayWind(filePath) {
   return null;
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -348,6 +416,63 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ error: 'Internal server error reading weather logs' }));
     }
     return;
+  }
+
+
+  if (pathname === '/api/taf') {
+    const requestedStation = (parsedUrl.searchParams.get('station') || 'VOMM').toUpperCase();
+    const fetchStation = requestedStation === 'VOCB' ? 'VOCE' : requestedStation;
+    const displayStation = requestedStation;
+    const metarTafUrl = `https://metar-taf.com/taf/${fetchStation}`;
+
+    try {
+      const response = await fetch(metarTafUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; TamilNaduAviationWeatherPortal/1.0)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`metar-taf.com returned ${response.status}`);
+      }
+
+      const html = await response.text();
+      let taf = extractTafFromHtml(html, fetchStation);
+
+      if (!taf) {
+        throw new Error('Could not extract raw TAF from metar-taf.com page');
+      }
+
+      if (displayStation === 'VOCB') {
+        taf = taf.replace(/\bVOCE\b/g, 'VOCB');
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        station: displayStation,
+        source: 'metar-taf.com',
+        url: metarTafUrl,
+        taf,
+        fetchedAt: new Date().toISOString(),
+        fallback: false
+      }));
+      return;
+    } catch (err) {
+      console.error('TAF fetch failed:', err.message);
+      const fallback = TAF_FALLBACK[displayStation] || TAF_FALLBACK[fetchStation] || TAF_FALLBACK.VOMM;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        station: displayStation,
+        source: 'fallback sample',
+        url: metarTafUrl,
+        taf: fallback,
+        fetchedAt: new Date().toISOString(),
+        fallback: true,
+        error: err.message
+      }));
+      return;
+    }
   }
 
   if (pathname === '/api/runway-wind') {

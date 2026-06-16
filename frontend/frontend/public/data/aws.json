@@ -1,0 +1,52 @@
+[
+  {
+    "station": "43279",
+    "name": "Meenambakkam",
+    "temp": 39,
+    "dewPoint": 26,
+    "rh": 50,
+    "ws": 10,
+    "wd": 190,
+    "rf": 0
+  },
+  {
+    "station": "43274",
+    "name": "Vellore",
+    "temp": 39,
+    "dewPoint": 26,
+    "rh": 50,
+    "ws": 10,
+    "wd": 190,
+    "rf": 0
+  },
+  {
+    "station": "43275",
+    "name": "Chengalpattu",
+    "temp": 39,
+    "dewPoint": 26,
+    "rh": 50,
+    "ws": 10,
+    "wd": 190,
+    "rf": 0
+  },
+  {
+    "station": "43276",
+    "name": "Puducherry",
+    "temp": 39,
+    "dewPoint": 26,
+    "rh": 50,
+    "ws": 10,
+    "wd": 190,
+    "rf": 0
+  },
+  {
+    "station": "43277",
+    "name": "Kanchipuram",
+    "temp": 39,
+    "dewPoint": 26,
+    "rh": 50,
+    "ws": 10,
+    "wd": 190,
+    "rf": 0
+  }
+]

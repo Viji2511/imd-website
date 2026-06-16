@@ -107,7 +107,7 @@ function getStationOffsets(station) {
   switch (code) {
     case 'VOCB':
     case 'VOCE':
-      return { temp: -4, dew: -3, windDir: 45, windSpeed: 3, pressure: -2, visibility: -1000 };
+      return { temp: 0, dew: 0, windDir: 0, windSpeed: 0, pressure: 0, visibility: 0 };
     case 'VOMD':
       return { temp: 2, dew: 1, windDir: -30, windSpeed: -2, pressure: 1, visibility: 500 };
     case 'VOSM':

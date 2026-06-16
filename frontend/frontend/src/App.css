@@ -645,14 +645,27 @@ body {
 
 .trend-card {
   border-radius: 16px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   background: rgba(15, 23, 42, 0.3);
   border: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 130px;
+  height: 155px;
   transition: var(--transition);
+}
+
+.trend-sparkline-container {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.trend-sparkline-container svg {
+  width: 100%;
+  height: 56px;
+  display: block;
 }
 
 .trend-card:hover {
@@ -708,6 +721,13 @@ body {
   justify-content: space-between;
   height: 200px;
   transition: var(--transition);
+  cursor: pointer;
+}
+
+.instrument-card:hover {
+  border-color: var(--accent) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.08);
 }
 
 .instrument-card__visual {
@@ -1248,4 +1268,150 @@ body,
   .app-shell--clear {
     grid-template-columns: 240px minmax(0, 1fr) 260px !important;
   }
+}
+
+/* Trend Card Hover Click Styles */
+.trend-card {
+  cursor: pointer;
+}
+
+.trend-card:hover {
+  border-color: var(--accent) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.08);
+}
+
+/* Trend Modal Specific Styling */
+.trend-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.trend-modal-card {
+  width: 620px;
+  max-width: 95vw;
+  max-height: 90vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+  animation: modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.trend-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 14px;
+}
+
+.trend-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.trend-modal-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.trend-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.trend-detailed-chart-container {
+  padding: 20px 16px;
+  background: rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.trend-modal-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trend-modal-history-list h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.trend-modal-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.01);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.trend-modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.trend-modal-table th,
+.trend-modal-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.trend-modal-table th {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: rgba(15, 23, 42, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.trend-modal-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.trend-modal-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
 }

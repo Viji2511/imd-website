@@ -228,25 +228,25 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
   const gradientId = `trendGrad-${color.replace("#", "")}`;
 
   return (
-    <div className="trend-chart-container" style={{ width: '100%', marginTop: 6 }}>
-      <svg width="100%" height="56" viewBox="0 0 230 56" style={{ overflow: 'visible' }}>
+    <div className="trend-sparkline-container" style={{ width: '100%', marginTop: 'auto' }}>
+      <svg width="100%" height="56" viewBox="0 0 230 56" style={{ overflow: 'hidden', display: 'block' }}>
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.2" />
             <stop offset="100%" stopColor={color} stopOpacity="0.0" />
           </linearGradient>
         </defs>
         
         {/* Horizontal grid bounds */}
-        <line x1="10" y1="10" x2="180" y2="10" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1="10" y1="29" x2="180" y2="29" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1="10" y1="48" x2="180" y2="48" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="10" x2="180" y2="10" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="29" x2="180" y2="29" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="48" x2="180" y2="48" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" strokeDasharray="2,2" />
 
         {/* Shaded Area underneath the line */}
         <path d={areaD} fill={`url(#${gradientId})`} />
 
         {/* The line itself */}
-        <path d={pathD} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 
         {/* Plotted markers (dots) for all data points */}
         {points.map((p, idx) => (
@@ -254,7 +254,7 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
             key={idx} 
             cx={p.x} 
             cy={p.y} 
-            r="1.5" 
+            r={idx === points.length - 1 ? "2.5" : "1.5"} 
             fill={idx === points.length - 1 ? "#ffffff" : color} 
             stroke={idx === points.length - 1 ? color : "none"}
             strokeWidth="0.8"
@@ -262,13 +262,462 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
         ))}
 
         {/* Left/Right Range Labels */}
-        <text x="186" y="12" fontSize="6.5" fill="var(--text-muted)" textAnchor="start">{maxVal}{unit}</text>
-        <text x="186" y="50" fontSize="6.5" fill="var(--text-muted)" textAnchor="start">{minVal}{unit}</text>
+        <text x="186" y="13" fontSize="9" fill="var(--text-muted)" textAnchor="start" dominantBaseline="middle">{maxVal}{unit}</text>
+        <text x="186" y="49" fontSize="9" fill="var(--text-muted)" textAnchor="start" dominantBaseline="middle">{minVal}{unit}</text>
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', color: 'var(--text-muted)', marginTop: 4, paddingLeft: '4.3%', paddingRight: '21.7%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 4, paddingLeft: '4.3%', paddingRight: '21.7%' }}>
         <span>12h ago</span>
         <span>Now</span>
       </div>
+    </div>
+  );
+}
+
+function TrendModal({ trend, onClose }) {
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+
+  if (!trend) return null;
+
+  const plotData = [...trend.data].reverse();
+  const minVal = Math.min(...plotData.map((d) => d.value));
+  const maxVal = Math.max(...plotData.map((d) => d.value));
+  const range = maxVal - minVal || 1;
+
+  const points = plotData.map((d, idx) => {
+    const x = 40 + (idx / (plotData.length - 1)) * 420;
+    const y = 160 - ((d.value - minVal) / range) * 140;
+    return { x, y, value: d.value, label: d.timeLabel, datetime: d.datetime };
+  });
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(" ");
+  const areaD = `${pathD} L ${points[points.length - 1].x} 160 L ${points[0].x} 160 Z`;
+  const gradientId = `modalTrendGrad-${trend.color.replace("#", "")}`;
+
+  const yTicks = [20, 66.7, 113.3, 160].map((y) => {
+    const val = minVal + ((160 - y) / 140) * range;
+    return { y, val: Math.round(val * 10) / 10 };
+  });
+
+  return (
+    <div className="trend-modal" onClick={onClose}>
+      <aside className="trend-modal-card" onClick={(e) => e.stopPropagation()}>
+        <header className="trend-modal-header">
+          <h3 className="trend-modal-title">{trend.title} Trend History</h3>
+          <button className="trend-modal-close-btn" onClick={onClose}>
+            ✕
+          </button>
+        </header>
+
+        <div className="trend-detailed-chart-container">
+          <svg viewBox="0 0 500 200" width="100%" height="220" style={{ overflow: 'visible', display: 'block' }}>
+            <defs>
+              <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={trend.color} stopOpacity="0.25" />
+                <stop offset="100%" stopColor={trend.color} stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
+
+            {yTicks.map((tick, i) => (
+              <g key={i}>
+                <line x1="40" y1={tick.y} x2="460" y2={tick.y} stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="3,3" />
+                <text x="32" y={tick.y} fontSize="8" fill="var(--text-muted)" textAnchor="end" dominantBaseline="middle">
+                  {tick.val}{trend.unit}
+                </text>
+              </g>
+            ))}
+
+            {[0, 6, 12, 18, points.length - 1].map((idx) => {
+              const p = points[idx];
+              if (!p) return null;
+              return (
+                <g key={idx}>
+                  <line x1={p.x} y1="160" x2={p.x} y2="165" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                  <text x={p.x} y="178" fontSize="8" fill="var(--text-muted)" textAnchor="middle">
+                    {p.label}
+                  </text>
+                </g>
+              );
+            })}
+
+            <path d={areaD} fill={`url(#${gradientId})`} />
+
+            <path d={pathD} fill="none" stroke={trend.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+            {hoveredPoint && (
+              <line x1={hoveredPoint.x} y1="20" x2={hoveredPoint.x} y2="160" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="2,2" />
+            )}
+
+            {points.map((p, idx) => (
+              <circle
+                key={idx}
+                cx={p.x}
+                cy={p.y}
+                r={hoveredPoint && hoveredPoint.idx === idx ? "4.5" : (idx === points.length - 1 ? "3" : "2")}
+                fill={hoveredPoint && hoveredPoint.idx === idx ? "#ffffff" : (idx === points.length - 1 ? "#ffffff" : trend.color)}
+                stroke={trend.color}
+                strokeWidth={hoveredPoint && hoveredPoint.idx === idx ? "2.5" : "1"}
+              />
+            ))}
+
+            {hoveredPoint && (
+              <g transform={`translate(${hoveredPoint.x > 250 ? hoveredPoint.x - 90 : hoveredPoint.x + 10}, ${hoveredPoint.y > 100 ? hoveredPoint.y - 45 : hoveredPoint.y + 10})`} style={{ pointerEvents: 'none' }}>
+                <rect width="80" height="36" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="1" />
+                <text x="8" y="14" fontSize="8.5" fill="var(--text-muted)">{hoveredPoint.label}</text>
+                <text x="8" y="27" fontSize="10.5" fill="#ffffff" fontWeight="800">{hoveredPoint.value}{trend.unit}</text>
+              </g>
+            )}
+
+            {points.map((p, idx) => {
+              const colWidth = 420 / (points.length - 1);
+              const startX = p.x - colWidth / 2;
+              return (
+                <rect
+                  key={idx}
+                  x={startX}
+                  y="20"
+                  width={colWidth}
+                  height="140"
+                  fill="transparent"
+                  onMouseEnter={() => setHoveredPoint({ ...p, idx })}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                  style={{ cursor: 'pointer' }}
+                />
+              );
+            })}
+          </svg>
+        </div>
+
+        <div className="trend-modal-history-list">
+          <h4>Observation Records (Newest First)</h4>
+          <div className="trend-modal-table-wrap">
+            <table className="trend-modal-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Value</th>
+                  <th>Observation Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trend.data.map((item, idx) => {
+                  const prevItem = trend.data[idx + 1];
+                  let changeIcon = "";
+                  let changeColor = "var(--text-muted)";
+                  let differenceText = "";
+                  
+                  if (prevItem) {
+                    const diff = item.value - prevItem.value;
+                    if (diff > 0) {
+                      changeIcon = "▲";
+                      changeColor = "#10b981";
+                      differenceText = `+${diff.toFixed(1)} ${trend.unit}`;
+                    } else if (diff < 0) {
+                      changeIcon = "▼";
+                      changeColor = "#ef4444";
+                      differenceText = `${diff.toFixed(1)} ${trend.unit}`;
+                    } else {
+                      changeIcon = "•";
+                      changeColor = "rgba(255, 255, 255, 0.35)";
+                      differenceText = "No change";
+                    }
+                  } else {
+                    differenceText = "--";
+                  }
+
+                  return (
+                    <tr key={idx}>
+                      <td>{item.datetime.split(' ')[0]} {item.timeLabel}</td>
+                      <td style={{ fontWeight: 800, color: trend.color }}>
+                        {item.value} {trend.unit}
+                      </td>
+                      <td style={{ color: changeColor, fontSize: '0.76rem', fontWeight: 600 }}>
+                        <span style={{ marginRight: 6 }}>{changeIcon}</span>
+                        {differenceText}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function CloudAltitudesModal({ weather, onClose }) {
+  if (!weather) return null;
+
+  const cloudCode = weather.cloud || "CLR";
+  const isClear = cloudCode === "CLR" || cloudCode === "SKC" || !cloudCode;
+  
+  let type = "CLR";
+  let heightFt = 0;
+  let heightM = 0;
+  let ceilingStatus = "No ceiling";
+  let altitudePercentage = 0; 
+
+  if (!isClear) {
+    type = cloudCode.slice(0, 3);
+    const heightVal = parseInt(cloudCode.slice(3), 10);
+    heightFt = heightVal * 100;
+    heightM = Math.round(heightFt * 0.3048);
+    altitudePercentage = Math.min(100, (heightFt / 10000) * 100);
+    if (type === "BKN" || type === "OVC") {
+      ceilingStatus = "Ceiling active";
+    }
+  }
+
+  const decodedType = decodeClouds(cloudCode);
+
+  return (
+    <div className="trend-modal" onClick={onClose}>
+      <aside className="trend-modal-card" onClick={(e) => e.stopPropagation()}>
+        <header className="trend-modal-header">
+          <h3 className="trend-modal-title">Cloud Altitude Analysis</h3>
+          <button className="trend-modal-close-btn" onClick={onClose}>
+            ✕
+          </button>
+        </header>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', minHeight: '300px' }}>
+          <div className="modal-glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800, alignSelf: 'flex-start', marginBottom: 16 }}>Atmospheric Profile</span>
+            
+            <div style={{ position: 'relative', height: '220px', width: '100%', borderLeft: '2px solid rgba(255,255,255,0.08)', paddingLeft: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ position: 'absolute', left: '-6px', top: '0', bottom: '0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>
+                <span>10k ft</span>
+                <span>7.5k ft</span>
+                <span>5k ft</span>
+                <span>2.5k ft</span>
+                <span>SFC</span>
+              </div>
+
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '2px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '55px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '110px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '165px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', bottom: '2px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
+
+              {!isClear ? (
+                <div style={{
+                  position: 'absolute',
+                  left: '20px',
+                  right: '10px',
+                  bottom: `${altitudePercentage * 0.9}%`,
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.03) 100%)',
+                  border: '1.5px dashed var(--accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 12px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                  boxShadow: '0 4px 12px rgba(56, 189, 248, 0.1)',
+                  animation: 'float-icon 4s ease-in-out infinite'
+                }}>
+                  <span style={{ marginRight: 8 }}>☁️</span>
+                  <span>{type} @ {heightFt} ft</span>
+                </div>
+              ) : (
+                <div style={{
+                  position: 'absolute',
+                  left: '20px',
+                  right: '10px',
+                  top: '40%',
+                  textAlign: 'center',
+                  fontSize: '0.82rem',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <span style={{ fontSize: '2rem' }}>☀️</span>
+                  <strong>Sky Clear (CLR)</strong>
+                  <span>No cloud layers observed below 10,000 ft</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="modal-glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: '0.58rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800 }}>Observation Status</span>
+              <strong style={{ fontSize: '1.1rem', color: isClear ? 'var(--vfr)' : 'var(--accent)' }}>
+                {isClear ? "Clear Skies" : `${type} Cloud Layer`}
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{decodedType}</span>
+            </div>
+
+            <div className="modal-glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontSize: '0.58rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800 }}>Layer Properties</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Base Height:</span>
+                  <strong>{isClear ? "N/A" : `${heightFt} ft (${heightM} m)`}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Ceiling:</span>
+                  <strong style={{ color: ceilingStatus === "Ceiling active" ? 'var(--ifr)' : 'var(--vfr)' }}>
+                    {ceilingStatus}
+                  </strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Coverage Octas:</span>
+                  <strong>{
+                    type === "FEW" ? "1-2 Octas" :
+                    type === "SCT" ? "3-4 Octas" :
+                    type === "BKN" ? "5-7 Octas" :
+                    type === "OVC" ? "8 Octas" : "0 Octas"
+                  }</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: '0.58rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800 }}>Flight Category Impact</span>
+              <strong style={{ fontSize: '0.9rem', color: isClear ? 'var(--vfr)' : (type === 'BKN' || type === 'OVC') ? 'var(--ifr)' : 'var(--mvfr)' }}>
+                {isClear ? "VFR: No Flight Constraints" : (type === 'BKN' || type === 'OVC') ? "Ceiling Active - IFR Rules Apply" : "MVFR Rules Apply"}
+              </strong>
+              <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: 0 }}>
+                Aviators must maintain a visual path clear of low-lying cloud layers according to local flight rules.
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function DaylightModal({ weather, onClose }) {
+  if (!weather) return null;
+
+  const timePart = weather.datetime.split(' ')[1] || "12:00";
+  const [hour, minute] = timePart.split(':').map(Number);
+  const currentMinutes = hour * 60 + minute;
+
+  const sunriseMinutes = 360;
+  const sunsetMinutes = 1110;
+  const daylightSpan = sunsetMinutes - sunriseMinutes;
+
+  const isDay = currentMinutes >= sunriseMinutes && currentMinutes <= sunsetMinutes;
+  
+  let sunProgress = 0;
+  let remainingText = "";
+  
+  if (isDay) {
+    sunProgress = (currentMinutes - sunriseMinutes) / daylightSpan;
+    const remainingMins = sunsetMinutes - currentMinutes;
+    const remH = Math.floor(remainingMins / 60);
+    const remM = remainingMins % 60;
+    remainingText = `${remH}h ${remM}m remaining until Sunset`;
+  } else {
+    sunProgress = currentMinutes < sunriseMinutes 
+      ? (currentMinutes + (1440 - sunsetMinutes)) / (1440 - daylightSpan)
+      : (currentMinutes - sunsetMinutes) / (1440 - daylightSpan);
+    
+    let minsToSunrise = 0;
+    if (currentMinutes < sunriseMinutes) {
+      minsToSunrise = sunriseMinutes - currentMinutes;
+    } else {
+      minsToSunrise = (1440 - currentMinutes) + sunriseMinutes;
+    }
+    const remH = Math.floor(minsToSunrise / 60);
+    const remM = minsToSunrise % 60;
+    remainingText = `${remH}h ${remM}m remaining until Sunrise`;
+  }
+
+  const angleRad = Math.PI * (isDay ? sunProgress : 0); 
+  const sunX = 20 + sunProgress * 320;
+  const sunY = isDay ? (130 - Math.sin(angleRad) * 90) : 130;
+
+  return (
+    <div className="trend-modal" onClick={onClose}>
+      <aside className="trend-modal-card" onClick={(e) => e.stopPropagation()}>
+        <header className="trend-modal-header">
+          <h3 className="trend-modal-title">Daylight & Sun Path</h3>
+          <button className="trend-modal-close-btn" onClick={onClose}>
+            ✕
+          </button>
+        </header>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="modal-glass-card" style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800, alignSelf: 'flex-start', marginBottom: 12 }}>Sun Path (Local Time: {timePart})</span>
+            
+            <div style={{ width: '100%', height: '160px', position: 'relative' }}>
+              <svg viewBox="0 0 360 160" width="100%" height="100%" style={{ overflow: 'visible', display: 'block' }}>
+                <line x1="10" y1="130" x2="350" y2="130" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" />
+                
+                <path d="M 20 130 Q 180 20, 340 130" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="2.5" strokeDasharray="4,4" />
+                
+                {isDay && (
+                  <path 
+                    d={`M 20 130 Q 180 20, 340 130`} 
+                    fill="none" 
+                    stroke="url(#sunPathGrad)" 
+                    strokeWidth="3.5" 
+                    strokeDasharray={`${sunProgress * 440} 440`}
+                  />
+                )}
+
+                <defs>
+                  <linearGradient id="sunPathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.8" />
+                  </linearGradient>
+                </defs>
+
+                <text x="20" y="146" fontSize="8" fill="var(--text-muted)" textAnchor="middle">06:00 (SR)</text>
+                <text x="340" y="146" fontSize="8" fill="var(--text-muted)" textAnchor="middle">18:30 (SS)</text>
+
+                <circle 
+                  cx={sunX} 
+                  cy={sunY} 
+                  r={isDay ? "7" : "5"} 
+                  fill={isDay ? "#fbbf24" : "rgba(255, 255, 255, 0.15)"} 
+                  stroke={isDay ? "#f59e0b" : "rgba(255,255,255,0.25)"} 
+                  strokeWidth="1.5" 
+                  filter={isDay ? "drop-shadow(0 0 8px #f59e0b)" : "none"} 
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="modal-glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: '0.58rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800 }}>Daylight Status</span>
+              <strong style={{ fontSize: '1.05rem', color: isDay ? '#fbbf24' : 'var(--text-muted)' }}>
+                {isDay ? "Daylight Active" : "Night Phase"}
+              </strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{remainingText}</span>
+            </div>
+
+            <div className="modal-glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: '0.58rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800 }}>Astronomical Times</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.78rem', marginTop: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Sunrise:</span>
+                  <strong>06:00 LT</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Sunset:</span>
+                  <strong>18:30 LT</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Duration:</span>
+                  <strong>12h 30m</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
@@ -316,6 +765,25 @@ function App() {
   const [runwayWindData, setRunwayWindData] = useState([]);
   const [isWindModalOpen, setIsWindModalOpen] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [selectedTrend, setSelectedTrend] = useState(null);
+  const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
+  const [isDaylightModalOpen, setIsDaylightModalOpen] = useState(false);
+
+  const handleOpenTrendModal = (title, key, color, unit) => {
+    if (!history || history.length === 0) return;
+    const trendData = history.map((h) => ({
+      datetime: h.datetime,
+      timeLabel: h.timeLabel,
+      value: h[key]
+    }));
+    setSelectedTrend({
+      title,
+      key,
+      data: trendData,
+      color,
+      unit
+    });
+  };
 
   useEffect(() => {
     fetchAirports();
@@ -659,7 +1127,7 @@ function App() {
               </div>
 
               {/* Wind Speed Gauge */}
-              <div className="instrument-card">
+              <div className="instrument-card" onClick={() => setIsWindModalOpen(true)} style={{ cursor: 'pointer' }}>
                 <div className="instrument-card__header">
                   <span className="instrument-card__title">Wind Speed</span>
                   <span className="instrument-card__icon">💨</span>
@@ -710,7 +1178,7 @@ function App() {
               </div>
 
               {/* Cloud Altitudes */}
-              <div className="instrument-card">
+              <div className="instrument-card" onClick={() => setIsCloudModalOpen(true)} style={{ cursor: 'pointer' }}>
                 <div className="instrument-card__header">
                   <span className="instrument-card__title">Cloud Altitudes</span>
                   <span className="instrument-card__icon">☁️</span>
@@ -750,7 +1218,7 @@ function App() {
               </div>
 
               {/* Daylight Card */}
-              <div className="instrument-card">
+              <div className="instrument-card" onClick={() => setIsDaylightModalOpen(true)} style={{ cursor: 'pointer' }}>
                 <div className="instrument-card__header">
                   <span className="instrument-card__title">Daylight</span>
                   <span className="instrument-card__icon">☀️</span>
@@ -777,25 +1245,25 @@ function App() {
               <section className="details-section" style={{ marginTop: 8 }}>
                 <h3 className="sidebar-section-title" style={{ fontSize: "0.72rem", marginBottom: 12 }}>Historic trends (Last 24 reports)</h3>
                 <div className="trends-grid">
-                  <div className="trend-card">
+                  <div className="trend-card" onClick={() => handleOpenTrendModal('Temperature', 'temperature', '#f43f5e', '°C')}>
                     <span className="trend-card__label">Temperature</span>
                     <span className="trend-card__value">{activeWeather.temperature}°C</span>
                     <TrendChart data={history.map((h) => h.temperature).reverse()} color="#f43f5e" unit="°C" />
                   </div>
 
-                  <div className="trend-card">
+                  <div className="trend-card" onClick={() => handleOpenTrendModal('Visibility', 'visibility', '#10b981', 'm')}>
                     <span className="trend-card__label">Visibility</span>
                     <span className="trend-card__value">{activeWeather.visibility} m</span>
                     <TrendChart data={history.map((h) => h.visibility).reverse()} color="#10b981" unit="m" />
                   </div>
 
-                  <div className="trend-card">
+                  <div className="trend-card" onClick={() => handleOpenTrendModal('Wind Speed', 'wind_speed', '#38bdf8', 'kt')}>
                     <span className="trend-card__label">Wind Speed</span>
                     <span className="trend-card__value">{activeWeather.wind_speed} kt</span>
                     <TrendChart data={history.map((h) => h.wind_speed).reverse()} color="#38bdf8" unit="kt" />
                   </div>
 
-                  <div className="trend-card">
+                  <div className="trend-card" onClick={() => handleOpenTrendModal('Pressure', 'pressure', '#a855f7', 'hPa')}>
                     <span className="trend-card__label">Pressure</span>
                     <span className="trend-card__value">{activeWeather.pressure} hPa</span>
                     <TrendChart data={history.map((h) => h.pressure).reverse()} color="#a855f7" unit="hPa" />
@@ -984,6 +1452,30 @@ function App() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Pop-up modal overlay for detailed trend interactive graph */}
+      {selectedTrend && (
+        <TrendModal
+          trend={selectedTrend}
+          onClose={() => setSelectedTrend(null)}
+        />
+      )}
+
+      {/* Pop-up modal overlay for detailed cloud altitude profile */}
+      {isCloudModalOpen && (
+        <CloudAltitudesModal
+          weather={activeWeather}
+          onClose={() => setIsCloudModalOpen(false)}
+        />
+      )}
+
+      {/* Pop-up modal overlay for daylight and sun path */}
+      {isDaylightModalOpen && (
+        <DaylightModal
+          weather={activeWeather}
+          onClose={() => setIsDaylightModalOpen(false)}
+        />
       )}
       </div>
     </>

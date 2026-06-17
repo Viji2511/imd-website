@@ -10,19 +10,19 @@
 .compass-face {
   position: relative;
   border-radius: 50%;
-  background: rgba(15, 23, 42, 0.45);
-  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 2px solid var(--glass-border);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
-  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.04);
   transition: all 0.3s ease;
 }
 
 .compass-face:hover {
-  border-color: rgba(56, 189, 248, 0.3);
-  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4), 0 8px 30px rgba(56, 189, 248, 0.1);
+  border-color: var(--accent);
+  box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(2, 132, 199, 0.08);
 }
 
 .compass-face::before {
@@ -31,7 +31,7 @@
   width: 84%;
   height: 84%;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
 }
 
 .compass-face::after {
@@ -40,7 +40,7 @@
   width: 32%;
   height: 32%;
   border-radius: 50%;
-  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border: 1px dashed var(--glass-border);
 }
 
 .compass-tick {
@@ -57,12 +57,12 @@
   display: block;
   width: 1px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #cbd5e1;
 }
 
 .compass-tick--major::after {
   height: 12px;
-  background: rgba(255, 255, 255, 0.55);
+  background: #64748b;
   width: 1.5px;
   margin-left: -0.25px;
 }
@@ -73,11 +73,10 @@
 
 .compass-label {
   position: absolute;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
   font-weight: 800;
   font-size: 0.9rem;
   letter-spacing: 0.1em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 .compass-label.north { top: 12px; left: 50%; transform: translateX(-50%); color: #ef4444; }
 .compass-label.south { bottom: 12px; left: 50%; transform: translateX(-50%); }
@@ -97,9 +96,9 @@
   position: absolute;
   width: 6px;
   height: 42%;
-  background: linear-gradient(180deg, #38bdf8 0%, #1e1b4b 100%);
+  background: linear-gradient(180deg, var(--accent) 0%, #1e3a8a 100%);
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
   transform: translateY(-50%);
 }
 
@@ -111,7 +110,7 @@
   transform: translateX(-50%);
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-bottom: 14px solid #38bdf8;
+  border-bottom: 14px solid var(--accent);
 }
 
 .compass-arrow::after {
@@ -122,7 +121,7 @@
   transform: translateX(-50%);
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 10px solid #1e1b4b;
+  border-top: 10px solid #1e3a8a;
 }
 
 .compass-arrow--jiggle {
@@ -142,10 +141,10 @@
   position: absolute;
   width: 12px;
   height: 12px;
-  background: radial-gradient(circle at 35% 35%, #ffffff, #0f172a);
+  background: radial-gradient(circle at 35% 35%, #ffffff, #94a3b8);
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-  border: 1.5px solid #38bdf8;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  border: 1.5px solid var(--accent);
   z-index: 2;
 }
 
@@ -158,7 +157,7 @@
   font-size: 0.8rem;
 }
 
-.compass-cardinal { font-weight: 700; color: #38bdf8; }
+.compass-cardinal { font-weight: 700; color: var(--accent); }
 .compass-deg { font-weight: 700; color: var(--text); }
 .compass-speed { color: var(--text-muted); }
 
@@ -166,7 +165,7 @@
 .compass-panel {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.5);
+  background: rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -180,13 +179,11 @@
   width: 480px;
   max-width: 95vw;
   max-height: 85vh;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
   overflow-y: auto;
   color: var(--text);
   display: flex;
@@ -203,11 +200,11 @@
   background: transparent;
 }
 .compass-panel-card::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.1);
   border-radius: 3px;
 }
 .compass-panel-card::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.2);
 }
 
 @keyframes modal-enter {
@@ -225,7 +222,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--glass-border);
   padding-bottom: 12px;
 }
 
@@ -233,22 +230,22 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .modal-airport-badge {
   font-size: 0.65rem;
   color: var(--accent);
   font-weight: 700;
-  background: rgba(56, 189, 248, 0.12);
+  background: var(--accent-glow);
   padding: 3px 6px;
   border-radius: 4px;
   font-family: monospace;
 }
 
 .modal-close-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.1);
   color: var(--text-muted);
   font-size: 14px;
   width: 28px;
@@ -262,16 +259,16 @@
 }
 
 .modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: #f1f5f9;
+  color: var(--text);
 }
 
 .modal-glass-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #f8fafc;
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 12px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 
 .modal-visualizers {
@@ -371,10 +368,12 @@
 .modal-runway-card {
   padding: 10px 12px;
   border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 
 .modal-runway-card .runway-name {
@@ -391,8 +390,8 @@
 
 .trend-chart-container {
   padding: 12px;
-  background: rgba(15, 23, 42, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f8fafc;
+  border: 1px solid var(--glass-border);
 }
 
 .trend-labels {
@@ -407,4 +406,3 @@
   .compass-face { border-width: 1.5px; }
   .modal-visualizers { grid-template-columns: 1fr; }
 }
-

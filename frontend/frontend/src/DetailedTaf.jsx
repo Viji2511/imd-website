@@ -37,7 +37,7 @@ const CloudSunIcon = () => (
 );
 
 const CloudIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
     <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
   </svg>
 );
@@ -59,7 +59,7 @@ const StormIcon = () => (
 );
 
 const FogIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
     <line x1="5" y1="8" x2="19" y2="8" />
     <line x1="3" y1="12" x2="21" y2="12" />
     <line x1="6" y1="16" x2="18" y2="16" />
@@ -168,6 +168,36 @@ const AIRPORT_METADATA = {
   }
 };
 
+function parseCustomDate(dateStr) {
+  if (!dateStr) return new Date();
+  if (dateStr instanceof Date) return dateStr;
+
+  const customMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (customMatch) {
+    const day = parseInt(customMatch[1], 10);
+    const month = parseInt(customMatch[2], 10) - 1;
+    const year = parseInt(customMatch[3], 10);
+    const hour = parseInt(customMatch[4], 10);
+    const minute = parseInt(customMatch[5], 10);
+    const second = customMatch[6] ? parseInt(customMatch[6], 10) : 0;
+    return new Date(year, month, day, hour, minute, second);
+  }
+
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[\sT](\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10) - 1;
+    const day = parseInt(isoMatch[3], 10);
+    const hour = parseInt(isoMatch[4], 10);
+    const minute = parseInt(isoMatch[5], 10);
+    const second = isoMatch[6] ? parseInt(isoMatch[6], 10) : 0;
+    return new Date(year, month, day, hour, minute, second);
+  }
+
+  const d = new Date(dateStr.replace(' ', 'T'));
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
 function parseTafPeriod(validityToken, baseDateStr) {
   const match = validityToken.match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);
   if (!match) return null;
@@ -177,10 +207,7 @@ function parseTafPeriod(validityToken, baseDateStr) {
   const endDay = parseInt(match[3], 10);
   const endHour = parseInt(match[4], 10);
 
-  let baseDate = new Date();
-  if (baseDateStr) {
-    baseDate = new Date(baseDateStr.replace(' ', 'T') + ':00');
-  }
+  const baseDate = parseCustomDate(baseDateStr);
 
   const year = baseDate.getFullYear();
   const month = baseDate.getMonth(); // 0-based
@@ -575,7 +602,7 @@ export default function DetailedTaf({ airport, tafText, activeWeather, onClose }
   let validityPeriodStr = "";
 
   if (activeWeather && activeWeather.datetime) {
-    const baseDate = new Date(activeWeather.datetime.replace(' ', 'T') + ':00');
+    const baseDate = parseCustomDate(activeWeather.datetime);
     observationTimeStr = baseDate.toLocaleString('en-US', {
       month: 'long',
       day: 'numeric',

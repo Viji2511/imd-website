@@ -314,9 +314,9 @@ function TrendChart({ data, color = "#38bdf8", unit = "" }) {
         </defs>
         
         {/* Horizontal grid bounds */}
-        <line x1="10" y1="10" x2="180" y2="10" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1="10" y1="29" x2="180" y2="29" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1="10" y1="48" x2="180" y2="48" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="10" x2="180" y2="10" stroke="rgba(15,23,42,0.08)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="29" x2="180" y2="29" stroke="rgba(15,23,42,0.05)" strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1="10" y1="48" x2="180" y2="48" stroke="rgba(15,23,42,0.08)" strokeWidth="0.8" strokeDasharray="2,2" />
 
         {/* Shaded Area underneath the line */}
         <path d={areaD} fill={`url(#${gradientId})`} />
@@ -395,7 +395,7 @@ function TrendModal({ trend, onClose }) {
 
             {yTicks.map((tick, i) => (
               <g key={i}>
-                <line x1="40" y1={tick.y} x2="460" y2={tick.y} stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" strokeDasharray="3,3" />
+                <line x1="40" y1={tick.y} x2="460" y2={tick.y} stroke="rgba(15,23,42,0.06)" strokeWidth="0.8" strokeDasharray="3,3" />
                 <text x="32" y={tick.y} fontSize="8" fill="var(--text-muted)" textAnchor="end" dominantBaseline="middle">
                   {tick.val}{trend.unit}
                 </text>
@@ -407,7 +407,7 @@ function TrendModal({ trend, onClose }) {
               if (!p) return null;
               return (
                 <g key={idx}>
-                  <line x1={p.x} y1="160" x2={p.x} y2="165" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                  <line x1={p.x} y1="160" x2={p.x} y2="165" stroke="rgba(15,23,42,0.15)" strokeWidth="1" />
                   <text x={p.x} y="178" fontSize="8" fill="var(--text-muted)" textAnchor="middle">
                     {p.label}
                   </text>
@@ -420,7 +420,7 @@ function TrendModal({ trend, onClose }) {
             <path d={pathD} fill="none" stroke={trend.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
             {hoveredPoint && (
-              <line x1={hoveredPoint.x} y1="20" x2={hoveredPoint.x} y2="160" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="2,2" />
+              <line x1={hoveredPoint.x} y1="20" x2={hoveredPoint.x} y2="160" stroke="rgba(15, 23, 42, 0.25)" strokeWidth="1" strokeDasharray="2,2" />
             )}
 
             {points.map((p, idx) => (
@@ -437,7 +437,7 @@ function TrendModal({ trend, onClose }) {
 
             {hoveredPoint && (
               <g transform={`translate(${hoveredPoint.x > 250 ? hoveredPoint.x - 90 : hoveredPoint.x + 10}, ${hoveredPoint.y > 100 ? hoveredPoint.y - 45 : hoveredPoint.y + 10})`} style={{ pointerEvents: 'none' }}>
-                <rect width="80" height="36" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="1" />
+                <rect width="80" height="36" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(15, 23, 42, 0.15)" strokeWidth="1" />
                 <text x="8" y="14" fontSize="8.5" fill="var(--text-muted)">{hoveredPoint.label}</text>
                 <text x="8" y="27" fontSize="10.5" fill="#ffffff" fontWeight="800">{hoveredPoint.value}{trend.unit}</text>
               </g>
@@ -561,7 +561,7 @@ function CloudAltitudesModal({ weather, onClose }) {
           <div className="modal-glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800, alignSelf: 'flex-start', marginBottom: 16 }}>Atmospheric Profile</span>
             
-            <div style={{ position: 'relative', height: '220px', width: '100%', borderLeft: '2px solid rgba(255,255,255,0.08)', paddingLeft: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div style={{ position: 'relative', height: '220px', width: '100%', borderLeft: '2px solid #e2e8f0', paddingLeft: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div style={{ position: 'absolute', left: '-6px', top: '0', bottom: '0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>
                 <span>10k ft</span>
                 <span>7.5k ft</span>
@@ -570,11 +570,11 @@ function CloudAltitudesModal({ weather, onClose }) {
                 <span>SFC</span>
               </div>
 
-              <div style={{ position: 'absolute', left: '0', right: '0', top: '2px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
-              <div style={{ position: 'absolute', left: '0', right: '0', top: '55px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
-              <div style={{ position: 'absolute', left: '0', right: '0', top: '110px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
-              <div style={{ position: 'absolute', left: '0', right: '0', top: '165px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
-              <div style={{ position: 'absolute', left: '0', right: '0', bottom: '2px', height: '1px', borderBottom: '1px dashed rgba(255,255,255,0.04)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '2px', height: '1px', borderBottom: '1px dashed rgba(15,23,42,0.08)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '55px', height: '1px', borderBottom: '1px dashed rgba(15,23,42,0.08)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '110px', height: '1px', borderBottom: '1px dashed rgba(15,23,42,0.08)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', top: '165px', height: '1px', borderBottom: '1px dashed rgba(15,23,42,0.08)' }} />
+              <div style={{ position: 'absolute', left: '0', right: '0', bottom: '2px', height: '1px', borderBottom: '1px dashed rgba(15,23,42,0.08)' }} />
 
               {!isClear ? (
                 <div style={{
@@ -728,9 +728,9 @@ function DaylightModal({ weather, onClose }) {
             
             <div style={{ width: '100%', height: '160px', position: 'relative' }}>
               <svg viewBox="0 0 360 160" width="100%" height="100%" style={{ overflow: 'visible', display: 'block' }}>
-                <line x1="10" y1="130" x2="350" y2="130" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" />
+                <line x1="10" y1="130" x2="350" y2="130" stroke="rgba(15, 23, 42, 0.15)" strokeWidth="1.5" />
                 
-                <path d="M 20 130 Q 180 20, 340 130" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="2.5" strokeDasharray="4,4" />
+                <path d="M 20 130 Q 180 20, 340 130" fill="none" stroke="rgba(15, 23, 42, 0.08)" strokeWidth="2.5" strokeDasharray="4,4" />
                 
                 {isDay && (
                   <path 
@@ -756,8 +756,8 @@ function DaylightModal({ weather, onClose }) {
                   cx={sunX} 
                   cy={sunY} 
                   r={isDay ? "7" : "5"} 
-                  fill={isDay ? "#fbbf24" : "rgba(255, 255, 255, 0.15)"} 
-                  stroke={isDay ? "#f59e0b" : "rgba(255,255,255,0.25)"} 
+                  fill={isDay ? "#fbbf24" : "rgba(15, 23, 42, 0.15)"} 
+                  stroke={isDay ? "#f59e0b" : "rgba(15, 23, 42, 0.25)"} 
                   strokeWidth="1.5" 
                   filter={isDay ? "drop-shadow(0 0 8px #f59e0b)" : "none"} 
                 />
@@ -1081,28 +1081,6 @@ function App() {
 
   return (
     <>
-      <video
-        key={activeTheme}
-        className="bg-video"
-        autoPlay
-        muted
-        loop
-        playsInline
-      >
-        <source
-          src={
-            activeTheme === "clear" || activeTheme === "hot"
-              ? "/videos/sunny.mp4"
-              : activeTheme === "storm"
-              ? "/videos/rainy.mp4"
-              : "/videos/cloudy.mp4"
-          }
-          type="video/mp4"
-        />
-      </video>
-
-      <div className="bg-overlay"></div>
-
       <div className={`app-shell app-shell--${activeTheme}`}>
       {/* COLUMN 1: LEFT SIDEBAR */}
       <aside className="sidebar glass-panel">
@@ -1313,7 +1291,7 @@ function App() {
                       </defs>
                       <path
                         d="M 15 50 A 35 35 0 0 1 85 50"
-                        stroke="rgba(255,255,255,0.06)"
+                        stroke="rgba(15,23,42,0.06)"
                         strokeWidth="6"
                         fill="none"
                         strokeLinecap="round"
@@ -1327,8 +1305,8 @@ function App() {
                         strokeDasharray={`${Math.min(100, (activeWeather.wind_speed / 40) * 100) * 1.1} 110`}
                       />
                       <g transform={`rotate(${Math.min(100, (activeWeather.wind_speed / 40) * 100) * 1.8 - 90} 50 50)`}>
-                        <line x1="50" y1="50" x2="50" y2="20" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
-                        <circle cx="50" cy="50" r="3.5" fill="#ffffff" />
+                        <line x1="50" y1="50" x2="50" y2="20" stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round" />
+                        <circle cx="50" cy="50" r="3.5" fill="var(--text)" />
                       </g>
                     </svg>
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center" }}>
@@ -1395,9 +1373,9 @@ function App() {
                 <div className="instrument-card__visual">
                   <div style={{ position: "relative", width: 100, height: 70 }}>
                     <svg viewBox="0 0 100 60" width="100%" height="100%">
-                      <path d="M 10 50 Q 50 12, 90 50" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="3 3" />
+                      <path d="M 10 50 Q 50 12, 90 50" stroke="rgba(15, 23, 42, 0.15)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="3 3" />
                       <circle cx="50" cy="22" r="4" fill="#fbbf24" filter="drop-shadow(0 0 6px #f59e0b)" />
-                      <line x1="5" y1="50" x2="95" y2="50" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" />
+                      <line x1="5" y1="50" x2="95" y2="50" stroke="rgba(15, 23, 42, 0.25)" strokeWidth="1" />
                       <text x="12" y="58" fontSize="5" fill="var(--text-muted)" textAnchor="middle">06:00</text>
                       <text x="88" y="58" fontSize="5" fill="var(--text-muted)" textAnchor="middle">18:30</text>
                     </svg>

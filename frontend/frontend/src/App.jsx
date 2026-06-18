@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import Compass from "./Compass";
 import DetailedTaf from "./DetailedTaf";
+import Header from "./Header";
+import Footer from "./Footer";
 // Runway configurations
 const runwayData = {
   VOMM: [{ name: "01L/19R", heading: 10 }, { name: "01R/19L", heading: 10 }],
@@ -182,6 +184,20 @@ function generateMockRunwayWind(icao) {
       windDirection: baseWindDir
     };
   });
+}
+
+function generateRadiosondeData(icao) {
+  const seed = (icao || "VOMM").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const offset = (seed % 5) - 2; // deterministic variation -2 to +2
+  
+  return [
+    { level: "1000 hPa", alt: 110, temp: 30 + offset, dew: 22 + Math.floor(offset / 2), wind: `${180 + offset * 10}° / ${10 + offset} kt` },
+    { level: "850 hPa", alt: 1520, temp: 20 + offset, dew: 12 + Math.floor(offset / 2), wind: `${210 + offset * 10}° / ${15 + offset} kt` },
+    { level: "700 hPa", alt: 3110, temp: 10 + offset, dew: 2 + offset, wind: `${230 + offset * 10}° / ${18 + offset} kt` },
+    { level: "500 hPa", alt: 5850, temp: -5 + offset, dew: -15 + offset, wind: `${250 + offset * 10}° / ${25 + offset} kt` },
+    { level: "400 hPa", alt: 7540, temp: -17 + offset, dew: -32 + offset, wind: `${260 + offset * 10}° / ${30 + offset} kt` },
+    { level: "300 hPa", alt: 9620, temp: -32 + offset, dew: -48 + offset, wind: `${270 + offset * 10}° / ${40 + offset} kt` }
+  ];
 }
 
 
@@ -835,7 +851,7 @@ function getActiveRunwayDirection(icao, windDirection) {
 function App() {
   const [airports, setAirports] = useState([]);
   const [selectedAirport, setSelectedAirport] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+
   const [history, setHistory] = useState([]);
   const [activeWeather, setActiveWeather] = useState(null);
   const [runwayWindData, setRunwayWindData] = useState([]);
@@ -990,14 +1006,7 @@ function App() {
   const selectedAirportDetails = airports.find((a) => a.icao === selectedAirport);
 
   // Filter airports in sidebar based on search query
-  const filteredAirports = airports.filter((ap) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      ap.name.toLowerCase().includes(query) ||
-      ap.city.toLowerCase().includes(query) ||
-      ap.icao.toLowerCase().includes(query)
-    );
-  });
+
   function getWeatherTheme(weatherData) {
     if (!weatherData) return "cloudy";
 
@@ -1081,72 +1090,37 @@ function App() {
 
   return (
     <>
+      <Header
+        airports={airports}
+        selectedAirport={selectedAirport}
+        onSelectAirport={setSelectedAirport}
+        onShowMetar={() => {
+          const element = document.querySelector(".main-content");
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+          }
+        }}
+        onShowTaf={() => {
+          setIsDetailedTafOpen(true);
+          const element = document.querySelector(".taf-section");
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+          }
+        }}
+        history={history}
+        activeWeather={activeWeather}
+        onSelectHistory={(datetime) => {
+          const selectedHist = history.find((h) => h.datetime === datetime);
+          if (selectedHist) setActiveWeather(selectedHist);
+        }}
+      />
       <div className={`app-shell app-shell--${activeTheme}`}>
       {/* COLUMN 1: LEFT SIDEBAR */}
       <aside className="sidebar glass-panel">
-        <header className="sidebar-brand imd-brand">
-          <img src="/IMD.jpg" alt="India Meteorological Department" className="imd-logo" />
-          <h1 className="brand-text">
-            INDIA METEOROLOGICAL DEPARTMENT
-          </h1>
-        </header>
 
-        {/* Station Search */}
-        <div className="sidebar-search-box">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search regional airports..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
 
-        {/* Regional Airports Dropdown */}
-        <h3 className="sidebar-section-title">Regional Stations</h3>
-        <select
-          value={selectedAirport}
-          onChange={(e) => setSelectedAirport(e.target.value)}
-          className="airport-dropdown"
-        >
-          {filteredAirports.map((ap) => {
-            let label = `${ap.icao} - ${ap.city}`;
 
-            if (ap.icao === "VOCE") {
-              label = "VOCB - Coimbatore";
-            }
-            return (
-              <option key={ap.id} value={ap.icao}>
-                {label}
-              </option>
-            );
-          })}
-        </select>
-
-        {/* Report History Dropdown */}
-        {history.length > 0 && (
-          <>
-            <h3 className="sidebar-section-title">Report History</h3>
-            <select
-              value={activeWeather ? activeWeather.datetime : ""}
-              onChange={(e) => {
-                const selectedHist = history.find((h) => h.datetime === e.target.value);
-                if (selectedHist) setActiveWeather(selectedHist);
-              }}
-              className="airport-dropdown"
-            >
-              {history.map((hist, idx) => {
-                return (
-                  <option key={idx} value={hist.datetime}>
-                    {hist.timeLabel}
-                  </option>
-                );
-              })}
-            </select>
-          </>
-        )}
+        {/* Report History moved to Header */}
 
         {/* AWS station dropdown and selected AWS observation cards */}
         {awsStations.length > 0 && (
@@ -1192,6 +1166,37 @@ function App() {
                 </div>
               </div>
             )}
+          </section>
+        )}
+
+        {/* Radiosonde Upper Air sounding values */}
+        {selectedAirport && (
+          <section className="radiosonde-panel" style={{ marginTop: '20px' }}>
+            <h3 className="sidebar-section-title">Radiosonde (Upper Air)</h3>
+            <div className="runway-wind-table-wrap" style={{ maxHeight: '220px', overflowY: 'auto' }}>
+              <table className="runway-wind-table" style={{ fontSize: '0.7rem' }}>
+                <thead>
+                  <tr>
+                    <th>Level</th>
+                    <th>Alt</th>
+                    <th>Temp</th>
+                    <th>Dew Pt</th>
+                    <th>Wind</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generateRadiosondeData(selectedAirport).map((row, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 700, color: 'var(--accent)' }}>{row.level}</td>
+                      <td>{row.alt}m</td>
+                      <td>{row.temp}°C</td>
+                      <td>{row.dew}°C</td>
+                      <td>{row.wind}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
       </aside>
@@ -1649,6 +1654,7 @@ function App() {
         />
       )}
       </div>
+      <Footer />
     </>
   );
 }

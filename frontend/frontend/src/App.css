@@ -134,13 +134,13 @@ body {
 .sidebar {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: calc(100vh - 300px);
+  height: auto;
   border-right: 1px solid var(--glass-border);
   border-top: none;
   border-bottom: none;
   border-left: none;
   padding: 16px;
-  overflow-y: auto;
   z-index: 10;
   box-sizing: border-box;
 }
@@ -359,8 +359,8 @@ body {
 
 /* === COLUMN 2: MIDDLE MAIN PANEL === */
 .main-content {
-  height: 100vh;
-  overflow-y: auto;
+  min-height: calc(100vh - 300px);
+  height: auto;
   padding: 16px 24px;
   display: flex;
   flex-direction: column;
@@ -853,13 +853,13 @@ body {
 .details-panel {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: calc(100vh - 300px);
+  height: auto;
   border-left: 1px solid var(--glass-border);
   border-top: none;
   border-bottom: none;
   border-right: none;
   padding: 16px;
-  overflow-y: auto;
   gap: 20px;
   z-index: 10;
   box-sizing: border-box;
@@ -1182,13 +1182,12 @@ body,
 .app-shell--clear {
   width: 100vw !important;
   max-width: none !important;
-  min-height: 100vh !important;
+  min-height: calc(100vh - 300px) !important;
   margin: 0 !important;
   padding: 0 !important;
   display: grid !important;
   grid-template-columns: minmax(230px, 18vw) minmax(0, 1fr) minmax(260px, 18vw) !important;
   background: transparent !important;
-  overflow: hidden;
 }
 
 .sidebar,

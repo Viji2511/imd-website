@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Header.css";
 
-function Header({ airports = [], selectedAirport, onSelectAirport, onShowMetar, onShowTaf, history = [], activeWeather, onSelectHistory }) {
+function Header({ airports = [], selectedAirport, onSelectAirport, onShowMetar, onShowTaf, history = [], activeWeather, onSelectHistory, isModalOpen }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -27,7 +27,7 @@ function Header({ airports = [], selectedAirport, onSelectAirport, onShowMetar, 
   };
 
   return (
-    <header className="imd-header">
+    <header className={`imd-header ${isModalOpen ? 'header-behind' : ''}`}>
 
       {/* 2. MAIN BRANDING BANNER */}
       <div className="main-branding-banner">
@@ -45,7 +45,7 @@ function Header({ airports = [], selectedAirport, onSelectAirport, onShowMetar, 
           </div>
 
           {/* Center: Live Station Search & Report History */}
-          <div className="branding-center" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="branding-center">
             <div style={{ position: 'relative', flex: 1 }}>
               <form className="search-form" onSubmit={handleSearchSubmit}>
                 <input

@@ -185,6 +185,9 @@
 /* Branding Center - Search Box */
 .branding-center {
   flex: 0 1 480px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 .search-form {
@@ -736,5 +739,21 @@
 .header-history-dropdown:focus {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
   transform: translateY(-1px);
+}
+
+.imd-header.header-behind {
+  z-index: 1 !important;
+}
+
+@media (max-width: 480px) {
+  .branding-center {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+  .header-history-dropdown {
+    width: 100%;
+  }
 }
 

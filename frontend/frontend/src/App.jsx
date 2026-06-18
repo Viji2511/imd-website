@@ -1088,6 +1088,8 @@ function App() {
 
   const fillD = `${pathD} L 450 60 L 50 60 Z`;
 
+  const isAnyModalOpen = isWindModalOpen || !!zoomedImage || !!selectedTrend || isCloudModalOpen || isDaylightModalOpen || isDetailedTafOpen;
+
   return (
     <>
       <Header
@@ -1113,6 +1115,7 @@ function App() {
           const selectedHist = history.find((h) => h.datetime === datetime);
           if (selectedHist) setActiveWeather(selectedHist);
         }}
+        isModalOpen={isAnyModalOpen}
       />
       <div className={`app-shell app-shell--${activeTheme}`}>
       {/* COLUMN 1: LEFT SIDEBAR */}

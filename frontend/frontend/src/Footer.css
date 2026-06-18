@@ -252,6 +252,13 @@
     align-items: center;
     text-align: center;
   }
+  .contact-details {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .contact-separator {
+    display: none;
+  }
   .bottom-bar-content {
     flex-direction: column;
     text-align: center;

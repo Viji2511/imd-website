@@ -1122,7 +1122,7 @@ body {
   transform: scale(1.04);
 }
 .app-shell {
-  width: 100vw !important;
+  width: 100% !important;
   max-width: none !important;
   min-height: 100vh;
   margin: 0 !important;
@@ -1180,7 +1180,7 @@ body,
 .app-shell--cloudy,
 .app-shell--hot,
 .app-shell--clear {
-  width: 100vw !important;
+  width: 100% !important;
   max-width: none !important;
   min-height: calc(100vh - 300px) !important;
   margin: 0 !important;
@@ -1262,7 +1262,37 @@ body,
   .app-shell--cloudy,
   .app-shell--hot,
   .app-shell--clear {
-    grid-template-columns: 240px minmax(0, 1fr) 260px !important;
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+  }
+  .details-panel {
+    grid-column: span 2 !important;
+    border-left: none !important;
+    border-top: 1px solid var(--glass-border) !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .app-shell,
+  .app-shell--storm,
+  .app-shell--cloudy,
+  .app-shell--hot,
+  .app-shell--clear {
+    grid-template-columns: 1fr !important;
+  }
+  .sidebar {
+    border-right: none !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+  }
+  .details-panel {
+    grid-column: span 1 !important;
+    border-left: none !important;
+    border-top: 1px solid var(--glass-border) !important;
+  }
+  .instruments-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
   }
 }
 

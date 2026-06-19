@@ -535,9 +535,9 @@ function generateHourlyTimeline(tafText, baseDateStr, details) {
     }
 
     let flightRuleCode = "VFR";
-    if (visMeters < 1600 || ceilFt < 500) flightRuleCode = "LIFR";
-    else if (visMeters < 4800 || ceilFt < 1000) flightRuleCode = "IFR";
-    else if (visMeters <= 8000 || ceilFt <= 3000) flightRuleCode = "MVFR";
+    if (visMeters < 1500 || ceilFt < 500) flightRuleCode = "LIFR";
+    else if (visMeters < 5000 || ceilFt < 1500) flightRuleCode = "IFR";
+    else if (visMeters < 8000 || ceilFt < 3000) flightRuleCode = "MVFR";
 
     // Resolved Weather
     let resolvedWeather = "--";

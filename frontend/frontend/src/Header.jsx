@@ -39,7 +39,7 @@ function Header({ airports = [], selectedAirport, onSelectAirport, onShowMetar, 
             </div>
             <div className="title-container">
               <span className="govt-text">Government of India</span>
-              <h1 className="dept-title-en" style={{ fontSize: "1.45rem", margin: "2px 0 4px 0" }}>India Meteorological Department</h1>
+              <h1 className="dept-title-en" style={{ fontSize: "1.45rem", margin: "2px 0 4px 0" }}>Meteorological Watch Office</h1>
               <span className="ministry-text">Ministry of Earth Sciences</span>
             </div>
           </div>
@@ -84,7 +84,7 @@ function Header({ airports = [], selectedAirport, onSelectAirport, onShowMetar, 
                         <div
                           key={ap.icao}
                           className={`search-dropdown-item ${ap.icao === selectedAirport ? 'active' : ''}`}
-                          onClick={() => {
+                          onMouseDown={() => {
                             onSelectAirport(ap.icao);
                             setSearchQuery("");
                             setIsOpen(false);

@@ -12,7 +12,7 @@ function Footer() {
             <img src="/IMD.jpg" alt="IMD Logo" className="footer-logo" />
             <div>
               <h3 className="footer-brand-title">भारत मौसम विज्ञान विभाग</h3>
-              <h4 className="footer-brand-subtitle">India Meteorological Department</h4>
+              <h4 className="footer-brand-subtitle">Meteorological Watch Office</h4>
             </div>
           </div>
         </div>
@@ -38,10 +38,10 @@ function Footer() {
       <div className="footer-bottom-bar">
         <div className="bottom-bar-content">
           <span className="copyright-text">
-            Copyright © {currentYear} India Meteorological Department. All Rights Reserved.
+            Copyright © {currentYear} Meteorological Watch Office. All Rights Reserved.
           </span>
           <span className="disclaimer-text">
-            Website content is managed by India Meteorological Department, Ministry of Earth Sciences.
+            Website content is managed by Meteorological Watch Office, Ministry of Earth Sciences.
           </span>
         </div>
       </div>

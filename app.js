@@ -423,56 +423,18 @@ const server = http.createServer(async (req, res) => {
     const requestedStation = (parsedUrl.searchParams.get('station') || 'VOMM').toUpperCase();
     const fetchStation = requestedStation === 'VOCB' ? 'VOCE' : requestedStation;
     const displayStation = requestedStation;
-    const metarTafUrl = `https://metar-taf.com/taf/${fetchStation}`;
 
-    try {
-      const response = await fetch(metarTafUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; TamilNaduAviationWeatherPortal/1.0)',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`metar-taf.com returned ${response.status}`);
-      }
-
-      const html = await response.text();
-      let taf = extractTafFromHtml(html, fetchStation);
-
-      if (!taf) {
-        throw new Error('Could not extract raw TAF from metar-taf.com page');
-      }
-
-      if (displayStation === 'VOCB') {
-        taf = taf.replace(/\bVOCE\b/g, 'VOCB');
-      }
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        station: displayStation,
-        source: 'metar-taf.com',
-        url: metarTafUrl,
-        taf,
-        fetchedAt: new Date().toISOString(),
-        fallback: false
-      }));
-      return;
-    } catch (err) {
-      console.error('TAF fetch failed:', err.message);
-      const fallback = TAF_FALLBACK[displayStation] || TAF_FALLBACK[fetchStation] || TAF_FALLBACK.VOMM;
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        station: displayStation,
-        source: 'fallback sample',
-        url: metarTafUrl,
-        taf: fallback,
-        fetchedAt: new Date().toISOString(),
-        fallback: true,
-        error: err.message
-      }));
-      return;
-    }
+    const fallback = TAF_FALLBACK[displayStation] || TAF_FALLBACK[fetchStation] || TAF_FALLBACK.VOMM;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      station: displayStation,
+      source: 'fallback sample',
+      url: `https://metar-taf.com/taf/${fetchStation}`,
+      taf: fallback,
+      fetchedAt: new Date().toISOString(),
+      fallback: true
+    }));
+    return;
   }
 
   if (pathname === '/api/runway-wind') {

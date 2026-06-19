@@ -214,15 +214,16 @@ function getFlightRule(visibility, cloud) {
     }
   }
 
-  // VFR: Vis > 8000m AND Ceiling > 3000ft
-  // LIFR: Vis < 1600m OR Ceiling < 500ft
-  // IFR: Vis < 4800m OR Ceiling < 1000ft
-  // MVFR: Vis <= 8000m OR Ceiling <= 3000ft
-  if (visibility < 1600 || ceiling < 500) {
+  // ICAO Annex 2 VMC Minima & International Flight Categories:
+  // VFR: Vis >= 8000m AND Ceiling >= 3000ft
+  // MVFR: Vis >= 5000m AND Ceiling >= 1500ft (but below VFR)
+  // IFR: Vis < 5000m OR Ceiling < 1500ft (below basic VMC minima)
+  // LIFR: Vis < 1500m OR Ceiling < 500ft
+  if (visibility < 1500 || ceiling < 500) {
     return { name: "LIFR", color: "#e879f9", bg: "rgba(232, 121, 249, 0.15)", label: "Low IFR" };
-  } else if (visibility < 4800 || ceiling < 1000) {
+  } else if (visibility < 5000 || ceiling < 1500) {
     return { name: "IFR", color: "#f87171", bg: "rgba(248, 113, 113, 0.15)", label: "IFR" };
-  } else if (visibility <= 8000 || ceiling <= 3000) {
+  } else if (visibility < 8000 || ceiling < 3000) {
     return { name: "MVFR", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", label: "Marginal VFR" };
   } else {
     return { name: "VFR", color: "#4ade80", bg: "rgba(74, 222, 128, 0.15)", label: "VFR" };
